@@ -7,6 +7,7 @@ import { ComingSoon } from "@/components/layout/coming-soon";
 import { LoginPage } from "@/features/auth/pages/login-page";
 import { RegisterPage } from "@/features/auth/pages/register-page";
 import { DiscoverPage } from "@/features/discover/pages/discover-page";
+import { JoinTablePage } from "@/features/tables/pages/join-table-page";
 import { NewTablePage } from "@/features/tables/pages/new-table-page";
 import { TableDetailPage } from "@/features/tables/pages/table-detail-page";
 import { PlaceDetailPage } from "@/features/places/pages/place-detail-page";
@@ -64,6 +65,7 @@ export const appRouter = createBrowserRouter([
         element: <DetailLayout />,
         children: [
           { path: "tables/new", element: <NewTablePage /> },
+          { path: "tables/join", element: <JoinTablePage /> },
           { path: "tables/:tableId", element: <TableDetailPage /> },
           { path: "places/:placeId", element: <PlaceDetailPage /> },
           { path: "outings/:outingId/review", element: <ReviewOutingPage /> },

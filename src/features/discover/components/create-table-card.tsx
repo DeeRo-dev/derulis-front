@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { FiPlus, FiClock } from "react-icons/fi";
+import { FiPlus, FiClock, FiKey } from "react-icons/fi";
 
 export function CreateTableCard() {
   return (
