@@ -57,6 +57,7 @@ export function toTable(dto: TableDto): Table {
     name: dto.name,
     description: dto.description,
     isPrivate: dto.isPrivate,
+    photoUrl: dto.photoUrl ?? null,
     inviteCode: dto.inviteCode,
     status,
     statusDetail,
@@ -71,6 +72,7 @@ export function toTable(dto: TableDto): Table {
       ? toUpcomingOuting(dto.upcomingOuting)
       : null,
     pastVisits: (dto.pastVisits ?? []).map(toPastVisit),
+    lastVisit: dto.lastVisit ? toPastVisit(dto.lastVisit) : null,
   };
 }
 

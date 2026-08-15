@@ -7,6 +7,11 @@ export type PlaceDto = {
   address: string;
   instagram: string | null;
   photoUrl: string | null;
+  city?: string | null;
+  province?: string | null;
+  country?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   /** Todavía no existe en el backend. */
   cuisines?: string[];
 };
@@ -23,6 +28,11 @@ export function toPlace(dto: PlaceDto): Place {
     photoUrl: dto.photoUrl,
     instagram: dto.instagram,
     cuisines: dto.cuisines ?? [],
+    city: dto.city ?? null,
+    province: dto.province ?? null,
+    country: dto.country ?? "Argentina",
+    latitude: dto.latitude ?? null,
+    longitude: dto.longitude ?? null,
   };
 }
 

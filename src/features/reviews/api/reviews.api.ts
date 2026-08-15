@@ -64,12 +64,27 @@ export async function rateMeal(
 
 export async function rateOuting(
   outingId: number,
-  input: { placeDerulis: number; serviceDerulis: number; comment?: string },
+  input: {
+    placeDerulis: number;
+    serviceDerulis: number;
+    valueDerulis?: number;
+    comment?: string;
+  },
 ): Promise<OutingRatingDto> {
   const { data } = await apiClient.put<OutingRatingDto>(
     `/outings/${outingId}/rating`,
     input,
   );
+  return data;
+}
+
+export async function joinOuting(outingId: number) {
+  const { data } = await apiClient.post(`/outings/${outingId}/join`);
+  return data;
+}
+
+export async function leaveOuting(outingId: number) {
+  const { data } = await apiClient.delete(`/outings/${outingId}/join`);
   return data;
 }
 

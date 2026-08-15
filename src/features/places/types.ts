@@ -3,6 +3,11 @@ export type Place = {
   name: string;
   address: string;
   photoUrl: string | null;
+  city: string | null;
+  province: string | null;
+  country: string;
+  latitude: number | null;
+  longitude: number | null;
   /** Etiquetas cortas: "Japonés", "Omakase". Vacío hasta que el backend las modele. */
   cuisines: string[];
   instagram: string | null;
@@ -46,4 +51,17 @@ export type PlaceReviews = {
   derulis: number | null;
   visitCount: number;
   tables: TableReview[];
+};
+
+export type PlaceWithScore = Place & {
+  derulis: number | null;
+  visitCount: number;
+};
+
+export type PagedPlaces = {
+  items: PlaceWithScore[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
 };

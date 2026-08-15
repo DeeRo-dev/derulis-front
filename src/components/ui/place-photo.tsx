@@ -1,10 +1,17 @@
+import { useState } from "react";
 import { PiForkKnifeBold } from "react-icons/pi";
 import { cn } from "@/lib/utils";
 
 /**
- * Foto del lugar. Mientras no haya storage de imágenes, los lugares sin foto
- * caen a un placeholder de marca en vez de un hueco roto
- * (brief, sección 5: "photoUrl apunta a una imagen por defecto").
+ * Vive en `public/`, no en `src/assets/`: así se referencia por URL y, si el
+ * archivo no está, la app sigue funcionando (cae al degradado de abajo).
+ * Un import de `src/assets` haría fallar el build entero.
+ */
+const DEFAULT_PHOTO = "/default-place.jpg";
+
+/**
+ * Foto del lugar. Mientras no haya storage de imágenes, los lugares sin
+ * foto usan una por defecto, y si esa tampoco está, un degradado de marca.
  */
 export function PlacePhoto({
   src,
@@ -15,12 +22,19 @@ export function PlacePhoto({
   alt: string;
   className?: string;
 }) {
-  if (src) {
+  const [failed, setFailed] = useState(false);
+
+  const url = src ?? DEFAULT_PHOTO;
+
+  if (!failed) {
     return (
       <img
-        src={src}
-        alt={alt}
+        src={url}
+        alt={src ? alt : ""}
+        // Sin foto propia es decorativa: no describe este lugar en concreto.
+        aria-hidden={src ? undefined : true}
         loading="lazy"
+        onError={() => setFailed(true)}
         className={cn("h-full w-full object-cover", className)}
       />
     );

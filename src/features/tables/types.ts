@@ -41,12 +41,15 @@ export type Table = {
   name: string;
   description: string;
   isPrivate: boolean;
+  photoUrl: string | null;
   inviteCode: string | null;
   status: TableStatus;
   statusDetail: string;
   members: Diner[];
   upcomingOuting: UpcomingOuting | null;
   pastVisits: PastVisit[];
+  /** Último lugar visitado. Lo usa el listado: "Última: <lugar>". */
+  lastVisit: PastVisit | null;
 };
 
 export type CreateTableInput = {

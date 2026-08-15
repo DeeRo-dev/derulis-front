@@ -2,12 +2,16 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { PublicLayout } from "../layouts/public-layout";
 import { AppLayout } from "../layouts/app-layout";
 import { DetailLayout } from "../layouts/detail-layout";
+import { MapLayout } from "../layouts/map-layout";
 import { GuestRoute, ProtectedRoute } from "./route-guards";
 import { ComingSoon } from "@/components/layout/coming-soon";
 import { LoginPage } from "@/features/auth/pages/login-page";
 import { RegisterPage } from "@/features/auth/pages/register-page";
 import { DiscoverPage } from "@/features/discover/pages/discover-page";
+import { SearchPage } from "@/features/discover/pages/search-page";
 import { JoinTablePage } from "@/features/tables/pages/join-table-page";
+import { NewOutingPage } from "@/features/tables/pages/new-outing-page";
+import { TablesPage } from "@/features/tables/pages/tables-page";
 import { NewTablePage } from "@/features/tables/pages/new-table-page";
 import { TableDetailPage } from "@/features/tables/pages/table-detail-page";
 import { PlaceDetailPage } from "@/features/places/pages/place-detail-page";
@@ -40,25 +44,13 @@ export const appRouter = createBrowserRouter([
         children: [
           { path: "discover", element: <DiscoverPage /> },
           { path: "profile", element: <ProfilePage /> },
-          {
-            path: "search",
-            element: (
-              <ComingSoon
-                title="Buscar"
-                description="Vas a poder buscar lugares por nombre, zona y precio real por plato."
-              />
-            ),
-          },
-          {
-            path: "tables",
-            element: (
-              <ComingSoon
-                title="Mesas"
-                description="El listado de tus mesas, con quién se sumó y qué puntuó cada uno."
-              />
-            ),
-          },
+          { path: "tables", element: <TablesPage /> },
         ],
+      },
+      {
+        // El mapa ocupa toda la pantalla: sin cabecera ni padding.
+        element: <MapLayout />,
+        children: [{ path: "search", element: <SearchPage /> }],
       },
       {
         // Pantallas de detalle: cada una trae su propia barra superior.
@@ -89,12 +81,7 @@ export const appRouter = createBrowserRouter([
           },
           {
             path: "tables/:tableId/outings/new",
-            element: (
-              <ComingSoon
-                title="Proponer un lugar"
-                description="Elegís el lugar, la fecha y avisás a los comensales."
-              />
-            ),
+            element: <NewOutingPage />,
           },
         ],
       },

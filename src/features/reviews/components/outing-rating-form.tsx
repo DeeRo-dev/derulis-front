@@ -10,42 +10,54 @@ export function OutingRatingForm({
   onSave,
   isSaving,
   saved,
+  place,
+  service,
+  value,
+  onPlace,
+  onService,
+  onValue,
 }: {
-  onSave: (input: {
-    placeDerulis: number;
-    serviceDerulis: number;
-    comment?: string;
-  }) => void;
+  onSave: (comment?: string) => void;
   isSaving: boolean;
   saved: boolean;
+  place: number | null;
+  service: number | null;
+  value: number | null;
+  onPlace: (value: number) => void;
+  onService: (value: number) => void;
+  onValue: (value: number) => void;
 }) {
-  const [place, setPlace] = useState<number | null>(null);
-  const [service, setService] = useState<number | null>(null);
   const [comment, setComment] = useState("");
 
-  const complete = place !== null && service !== null;
+  const complete = place !== null && service !== null && value !== null;
 
   return (
     <section className="rounded-3xl bg-white p-5 shadow-lg shadow-lilac-200/50">
       <h2 className="text-lg font-bold tracking-tight text-foreground">
-        El lugar y la atención
+        Calificación global
       </h2>
       <p className="mt-1 text-sm text-muted">
-        Van aparte de las comidas y pesan igual en tu voto.
+        Van aparte de las comidas y cada una pesa igual en tu voto.
       </p>
 
       <div className="mt-4 space-y-4">
         <DerulisPicker
           label="El lugar"
           value={place}
-          onChange={setPlace}
+          onChange={onPlace}
           name="place-derulis"
         />
         <DerulisPicker
-          label="La atención"
+          label="Atención al cliente"
           value={service}
-          onChange={setService}
+          onChange={onService}
           name="service-derulis"
+        />
+        <DerulisPicker
+          label="Relación precio-calidad"
+          value={value}
+          onChange={onValue}
+          name="value-derulis"
         />
 
         <TextArea
@@ -62,14 +74,7 @@ export function OutingRatingForm({
       <Button
         className="mt-4 w-full"
         disabled={!complete || isSaving}
-        onClick={() =>
-          complete &&
-          onSave({
-            placeDerulis: place,
-            serviceDerulis: service,
-            comment: comment.trim() || undefined,
-          })
-        }
+        onClick={() => complete && onSave(comment.trim() || undefined)}
       >
         {isSaving ? "Guardando…" : saved ? "Actualizar" : "Guardar"}
       </Button>

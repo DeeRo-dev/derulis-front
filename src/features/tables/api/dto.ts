@@ -34,9 +34,11 @@ export type TableDto = {
   name: string;
   description: string;
   isPrivate: boolean;
+  photoUrl?: string | null;
   inviteCode: string | null;
   createdById: number;
   members: TableMemberDto[];
   upcomingOuting?: OutingDto | null;
+  lastVisit?: OutingDto | null;
   pastVisits?: OutingDto[];
 };

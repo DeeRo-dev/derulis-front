@@ -1,11 +1,16 @@
+import { useState } from "react";
 import { useCurrentUser } from "@/features/auth/hooks/use-auth";
 import { CreateTableCard } from "../components/create-table-card";
 import { ActiveTables } from "../components/active-tables";
-import { RecentActivity } from "../components/recent-activity";
+import { PlaceSearch } from "../components/place-search";
+import { TopPlaces } from "../components/top-places";
 
 export function DiscoverPage() {
   const user = useCurrentUser();
   const firstName = user?.name?.split(" ")[0];
+
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   return (
     <>
@@ -18,7 +23,23 @@ export function DiscoverPage() {
       </div>
 
       <ActiveTables />
-      <RecentActivity />
+
+      <section className="mt-10">
+        <h2 className="text-center text-base font-medium text-muted">
+          Descubrí nuevos sabores cerca tuyo
+        </h2>
+
+        <PlaceSearch
+          value={search}
+          onSearch={(term) => {
+            setSearch(term);
+            // Buscar algo nuevo tiene que arrancar en la primera página.
+            setPage(1);
+          }}
+        />
+      </section>
+
+      <TopPlaces search={search} page={page} onPageChange={setPage} />
     </>
   );
 }

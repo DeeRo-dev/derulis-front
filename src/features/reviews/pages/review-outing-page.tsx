@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiMapPin, FiUsers } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DetailTopBar } from "@/components/layout/detail-top-bar";
 import { FormError } from "@/features/auth/components/form-error";
+import { useCurrentUser } from "@/features/auth/hooks/use-auth";
 import { getApiErrorMessage, isNotFound } from "@/lib/apiClient";
 import { formatDateTime } from "@/lib/format";
 import {
@@ -13,17 +15,25 @@ import {
   useOuting,
   useRateMeal,
   useRateOuting,
+  useOutingAttendance,
 } from "../hooks/use-reviews";
 import { MealCard } from "../components/meal-card";
 import { AddMealForm } from "../components/add-meal-form";
 import { OutingRatingForm } from "../components/outing-rating-form";
+import { ReviewSummary } from "../components/review-summary";
 
 export function ReviewOutingPage() {
   const navigate = useNavigate();
   const { outingId } = useParams();
   const id = Number(outingId);
 
+  const currentUser = useCurrentUser();
+  // Estado elevado: el resumen en vivo necesita ver las tres notas.
+  const [place, setPlace] = useState<number | null>(null);
+  const [service, setService] = useState<number | null>(null);
+  const [value, setValue] = useState<number | null>(null);
   const outing = useOuting(id);
+  const attendance = useOutingAttendance(id);
   const meals = useMeals(id);
 
   const placeId = outing.data?.place.id;
@@ -74,6 +84,70 @@ export function ReviewOutingPage() {
 
   const data = outing.data;
   const closed = data.status !== "planned";
+
+  /* Ser miembro de la mesa no alcanza: solo puntúa quien fue a la salida.
+     El backend responde 403 si no sos guest, así que la UI tiene que
+     ofrecer sumarse antes que los controles de puntuación. */
+  const isGuest = data.guests.some((guest) => guest.id === currentUser?.id);
+
+  if (!isGuest) {
+    return (
+      <section>
+        <DetailTopBar />
+
+        <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+          {data.place.name}
+        </h1>
+        <p className="mt-1 text-sm text-muted first-letter:uppercase">
+          {formatDateTime(data.dateTime)}
+        </p>
+
+        <div className="mt-8 rounded-3xl bg-white p-8 text-center shadow-lg shadow-lilac-200/50">
+          <FiUsers
+            className="mx-auto h-8 w-8 text-lilac-400"
+            aria-hidden="true"
+          />
+          <p className="mt-3 font-semibold text-foreground">
+            No estás anotado en esta salida
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            {closed
+              ? "Ya ocurrió, así que no podés sumarte ni puntuarla."
+              : "Sumate para cargar lo que comieron y puntuar."}
+          </p>
+
+          {attendance.join.isError ? (
+            <div className="mt-4 text-left">
+              <FormError
+                message={getApiErrorMessage(
+                  attendance.join.error,
+                  "No pudimos sumarte a la salida.",
+                )}
+              />
+            </div>
+          ) : null}
+
+          {!closed ? (
+            <Button
+              className="mt-5 w-full"
+              disabled={attendance.join.isPending}
+              onClick={() => attendance.join.mutate()}
+            >
+              {attendance.join.isPending ? "Sumándote…" : "Sumarme a la salida"}
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
+              className="mt-5 w-full"
+              onClick={() => navigate(`/places/${data.place.id}`)}
+            >
+              Ver el lugar
+            </Button>
+          )}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section>
@@ -141,6 +215,15 @@ export function ReviewOutingPage() {
           ))
         )}
 
+        {createMeal.isError ? (
+          <FormError
+            message={getApiErrorMessage(
+              createMeal.error,
+              "No pudimos agregar la comida.",
+            )}
+          />
+        ) : null}
+
         {!closed ? (
           <AddMealForm
             isSaving={createMeal.isPending}
@@ -164,7 +247,32 @@ export function ReviewOutingPage() {
         <OutingRatingForm
           isSaving={rateOuting.isPending}
           saved={rateOuting.isSuccess}
-          onSave={(input) => rateOuting.mutate(input)}
+          place={place}
+          service={service}
+          value={value}
+          onPlace={setPlace}
+          onService={setService}
+          onValue={setValue}
+          onSave={(comment) =>
+            place !== null &&
+            service !== null &&
+            value !== null &&
+            rateOuting.mutate({
+              placeDerulis: place,
+              serviceDerulis: service,
+              valueDerulis: value,
+              comment,
+            })
+          }
+        />
+      </div>
+
+      <div className="mt-8">
+        <ReviewSummary
+          meals={meals.data ?? []}
+          place={place}
+          service={service}
+          value={value}
         />
       </div>
 

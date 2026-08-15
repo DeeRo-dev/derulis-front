@@ -49,6 +49,16 @@ export function getApiStatus(error: unknown): number | undefined {
 
 export const isNotFound = (error: unknown) => getApiStatus(error) === 404;
 
+/**
+ * Solo es problema de red si axios falló SIN respuesta.
+ *
+ * No alcanza con "no tiene status": un TypeError al mapear la respuesta
+ * tampoco lo tiene, y mostrarle "revisá tu internet" al usuario cuando en
+ * realidad la API cambió de forma lo manda a buscar donde no es.
+ */
+export const isNetworkError = (error: unknown) =>
+  axios.isAxiosError(error) && error.response === undefined;
+
 /** Extrae el mensaje que manda Nest, que puede venir como string o array. */
 export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (typeof error === "object" && error !== null && "response" in error) {
@@ -59,5 +69,9 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
     if (Array.isArray(message)) return message[0] ?? fallback;
     if (typeof message === "string") return message;
   }
+
+  // Errores nuestros (validar la forma de la respuesta, por ejemplo).
+  if (error instanceof Error && error.message) return error.message;
+
   return fallback;
 }

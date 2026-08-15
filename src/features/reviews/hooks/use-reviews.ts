@@ -46,6 +46,28 @@ function useRefreshAfterRating(outingId: number, placeId?: number) {
   };
 }
 
+/** Sumarse o bajarse de la salida: es opt-in, no te anota nadie por vos. */
+export function useOutingAttendance(outingId: number) {
+  const queryClient = useQueryClient();
+
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: outingsKeys.all });
+    void queryClient.invalidateQueries({ queryKey: tablesKeys.all });
+  };
+
+  const join = useMutation({
+    mutationFn: () => api.joinOuting(outingId),
+    onSuccess: refresh,
+  });
+
+  const leave = useMutation({
+    mutationFn: () => api.leaveOuting(outingId),
+    onSuccess: refresh,
+  });
+
+  return { join, leave };
+}
+
 export function useCreateMeal(outingId: number) {
   const refresh = useRefreshAfterRating(outingId);
 
@@ -79,6 +101,7 @@ export function useRateOuting(outingId: number, placeId?: number) {
     mutationFn: (input: {
       placeDerulis: number;
       serviceDerulis: number;
+      valueDerulis?: number;
       comment?: string;
     }) => api.rateOuting(outingId, input),
     onSuccess: refresh,
