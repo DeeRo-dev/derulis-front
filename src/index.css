@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+/* Sistema de diseño Derulis — ver FRONTEND-BRIEF.md sección 3.
+   En Tailwind v4 los tokens van acá, no en tailwind.config.ts. */
+@theme {
+  --color-lilac-50: #f8f6fe;
+  --color-lilac-100: #f0eafd;
+  --color-lilac-200: #e0d5fb;
+  --color-lilac-300: #c7b2f7;
+  --color-lilac-400: #a78bfa;
+  --color-lilac-500: #8b5cf6;
+  --color-lilac-600: #7343e0;
+  --color-lilac-700: #5b32b8;
+
+  /* lilac-600: 5.8:1 sobre blanco. No bajar el tono sin revisar contraste. */
+  --color-primary: #7343e0;
+  --color-primary-foreground: #ffffff;
+  --color-primary-hover: #5b32b8;
+
+  --color-derulis: #f4b740;
+  --color-derulis-empty: #e0d5fb;
+
+  --color-foreground: #2e2a33;
+  --color-muted: #7a7385;
+
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+
+  --font-sans:
+    "Plus Jakarta Sans", system-ui, "Segoe UI", Roboto, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100svh;
+    background: var(--color-lilac-50);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
