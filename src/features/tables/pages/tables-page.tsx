@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { FiPlus, FiChevronRight, FiWifiOff } from "react-icons/fi";
+import { itemVariants, listVariants, tap } from "@/lib/motion";
 import { PiQrCodeBold } from "react-icons/pi";
 import { AvatarStack } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -20,26 +22,30 @@ function ActionCard({
   highlighted?: boolean;
 }) {
   return (
-    <Link
-      to={to}
-      className={
-        "flex flex-col items-center justify-center gap-3 rounded-3xl px-4 py-6 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary " +
-        (highlighted
-          ? "bg-lilac-100 text-primary hover:bg-lilac-200"
-          : "bg-white text-foreground shadow-lg shadow-lilac-200/50 hover:shadow-xl")
-      }
-    >
-      <span
+    <motion.div variants={itemVariants} whileTap={tap}>
+      <Link
+        to={to}
         className={
-          "flex h-12 w-12 items-center justify-center rounded-full " +
-          (highlighted ? "bg-white text-primary" : "bg-lilac-100 text-lilac-700")
+          "flex h-full flex-col items-center justify-center gap-3 rounded-3xl px-4 py-6 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary " +
+          (highlighted
+            ? "bg-lilac-100 text-primary hover:bg-lilac-200"
+            : "bg-white text-foreground shadow-lg shadow-lilac-200/50 hover:shadow-xl")
         }
-        aria-hidden="true"
       >
-        {icon}
-      </span>
-      <span className="text-sm font-semibold">{label}</span>
-    </Link>
+        <span
+          className={
+            "flex h-12 w-12 items-center justify-center rounded-full " +
+            (highlighted
+              ? "bg-white text-primary"
+              : "bg-lilac-100 text-lilac-700")
+          }
+          aria-hidden="true"
+        >
+          {icon}
+        </span>
+        <span className="text-sm font-semibold">{label}</span>
+      </Link>
+    </motion.div>
   );
 }
 
@@ -51,8 +57,8 @@ function TableRow({ table }: { table: Table }) {
       : table.statusDetail;
 
   return (
-    <li>
-      <article className="relative flex items-center gap-3 rounded-3xl bg-white p-3 shadow-lg shadow-lilac-200/50 transition focus-within:ring-2 focus-within:ring-primary hover:shadow-xl">
+    <motion.li variants={itemVariants} whileTap={tap}>
+      <article className="relative flex items-center gap-3 rounded-3xl bg-white p-3 shadow-lg shadow-lilac-200/50 transition-shadow focus-within:ring-2 focus-within:ring-primary hover:shadow-xl">
         <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl">
           <PlacePhoto
             src={table.lastVisit?.place.photoUrl ?? null}
@@ -85,7 +91,7 @@ function TableRow({ table }: { table: Table }) {
           aria-hidden="true"
         />
       </article>
-    </li>
+    </motion.li>
   );
 }
 
@@ -93,15 +99,24 @@ export function TablesPage() {
   const { data: tables, isPending, isError, refetch } = useActiveTables();
 
   return (
-    <>
-      <h1 className="pt-4 text-3xl font-bold tracking-tight text-foreground">
+    <motion.div variants={listVariants} initial="initial" animate="animate">
+      <motion.h1
+        variants={itemVariants}
+        className="pt-4 text-3xl font-bold tracking-tight text-foreground"
+      >
         Mis mesas
-      </h1>
-      <p className="mt-2 text-base leading-6 text-muted">
+      </motion.h1>
+      <motion.p
+        variants={itemVariants}
+        className="mt-2 text-base leading-6 text-muted"
+      >
         Gestioná tus grupos y descubran nuevos lugares juntos.
-      </p>
+      </motion.p>
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
+      <motion.div
+        variants={listVariants}
+        className="mt-6 grid grid-cols-2 gap-3"
+      >
         <ActionCard
           to="/tables/new"
           label="Crear mesa"
@@ -113,11 +128,14 @@ export function TablesPage() {
           label="Unirme con código"
           icon={<PiQrCodeBold className="h-6 w-6" />}
         />
-      </div>
+      </motion.div>
 
-      <h2 className="mt-8 text-lg font-bold tracking-tight text-foreground">
+      <motion.h2
+        variants={itemVariants}
+        className="mt-8 text-lg font-bold tracking-tight text-foreground"
+      >
         Mesas activas
-      </h2>
+      </motion.h2>
 
       <div className="mt-3">
         {isPending ? (
@@ -153,13 +171,13 @@ export function TablesPage() {
             </p>
           </div>
         ) : (
-          <ul className="space-y-3">
+          <motion.ul variants={listVariants} className="space-y-3">
             {tables.map((table) => (
               <TableRow key={table.id} table={table} />
             ))}
-          </ul>
+          </motion.ul>
         )}
       </div>
-    </>
+    </motion.div>
   );
 }

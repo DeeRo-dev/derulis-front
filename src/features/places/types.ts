@@ -56,6 +56,12 @@ export type PlaceReviews = {
 export type PlaceWithScore = Place & {
   derulis: number | null;
   visitCount: number;
+  /**
+   * Un comentario cualquiera de los que dejó la comunidad, para mostrar de
+   * muestra en el listado. Sólo lo trae el listado: en el detalle es `null`
+   * porque ahí se leen todas las reseñas.
+   */
+  comment: string | null;
 };
 
 export type PagedPlaces = {

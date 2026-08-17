@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* Las animaciones de entrada/salida (animate-in, slide-in-from-left) que
+   usan el Sheet y el Tooltip de shadcn. En Tailwind v4 no vienen de fábrica. */
+@import "tw-animate-css";
 
 /* Sistema de diseño Derulis — ver FRONTEND-BRIEF.md sección 3.
    En Tailwind v4 los tokens van acá, no en tailwind.config.ts. */
@@ -20,11 +23,43 @@
   --color-derulis: #f4b740;
   --color-derulis-empty: #e0d5fb;
 
+  /* Crema. Extensión del brief (sección 3) para las burbujas de reseña: el
+     texto que escribió una persona se despega del lila del sistema y se lee
+     como una voz, no como una superficie más de la app.
+     cream-100 sobre foreground da 15:1, de sobra para AA. */
+  --color-cream-50: #fdf8f5;
+  --color-cream-100: #faefe9;
+  --color-cream-200: #f2ddd3;
+
   --color-foreground: #2e2a33;
   --color-muted: #7a7385;
 
   --color-success: #16a34a;
   --color-error: #dc2626;
+
+  /* Tokens que dan por sentados los componentes de shadcn (sheet, input,
+     tooltip). Sin esto las clases no se generan y el panel queda
+     transparente. Van al lila del sistema, no al gris que trae shadcn.
+     Ojo: `muted` ya existe arriba como color de texto, así que
+     `muted-foreground` lo repite en vez de redefinirlo. */
+  --color-background: #f8f6fe;
+  --color-muted-foreground: #7a7385;
+  --color-border: #e0d5fb;
+  --color-input: #e0d5fb;
+  --color-ring: #7343e0;
+  --color-secondary: #f0eafd;
+  --color-destructive: #dc2626;
+
+  /* Sidebar. El panel es blanco para despegarse del fondo lila de la app,
+     y el item activo usa lilac-100 con texto violeta. */
+  --color-sidebar: #ffffff;
+  --color-sidebar-foreground: #2e2a33;
+  --color-sidebar-primary: #7343e0;
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: #f0eafd;
+  --color-sidebar-accent-foreground: #7343e0;
+  --color-sidebar-border: #e0d5fb;
+  --color-sidebar-ring: #7343e0;
 
   --font-sans:
     "Plus Jakarta Sans", system-ui, "Segoe UI", Roboto, sans-serif;
@@ -52,5 +87,14 @@
   h2,
   h3 {
     text-wrap: balance;
+  }
+
+  /* shadcn escribe `border-l` sin color y cuenta con que el default no sea
+     currentColor, que es lo que Tailwind v4 usa. En el código propio los
+     bordes siempre llevan color explícito, así que esto no pisa nada. */
+  *,
+  ::after,
+  ::before {
+    border-color: var(--color-border);
   }
 }

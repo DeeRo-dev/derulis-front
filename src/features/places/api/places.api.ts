@@ -10,8 +10,9 @@ export type CreatePlaceInput = {
   province?: string;
   country?: string;
   instagram?: string;
-  latitude?: number;
-  longitude?: number;
+  /* Obligatorias: el backend rechaza un lugar sin punto en el mapa. */
+  latitude: number;
+  longitude: number;
 };
 
 export type SearchPlacesParams = {
@@ -25,7 +26,11 @@ export type SearchPlacesParams = {
 };
 
 type PagedPlacesDto = {
-  items: (PlaceDto & { derulis: number | null; visitCount: number })[];
+  items: (PlaceDto & {
+    derulis: number | null;
+    visitCount: number;
+    comment?: string | null;
+  })[];
   page: number;
   limit: number;
   total: number;
@@ -55,6 +60,8 @@ export async function searchPlaces(
     ...toPlace(item),
     derulis: item.derulis,
     visitCount: item.visitCount,
+    // Un backend sin el campo todavía: la tarjeta simplemente no lo muestra.
+    comment: item.comment?.trim() || null,
   }));
 
   return {
@@ -71,7 +78,23 @@ export async function getPlace(id: number): Promise<PlaceWithScore> {
     PlaceDto & { derulis: number | null; visitCount: number }
   >(`/places/${id}`);
 
-  return { ...toPlace(data), derulis: data.derulis, visitCount: data.visitCount };
+  return {
+    ...toPlace(data),
+    derulis: data.derulis,
+    visitCount: data.visitCount,
+    // El detalle trae las reseñas completas aparte, no hace falta la muestra.
+    comment: null,
+  };
+}
+
+/**
+ * Pide al backend que complete las coordenadas del lugar a partir de su
+ * dirección. Es idempotente: si ya tiene punto, o si ya se intentó y la
+ * dirección no se pudo resolver, devuelve el lugar sin consultar de nuevo.
+ */
+export async function locatePlace(id: number): Promise<Place> {
+  const { data } = await apiClient.post<PlaceDto>(`/places/${id}/locate`);
+  return toPlace(data);
 }
 
 export async function getPlaceReviews(id: number): Promise<PlaceReviews> {

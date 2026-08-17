@@ -3,5 +3,14 @@
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
-  ]
+  ],
+  /* Duplicado de tsconfig.app.json a propósito: acá no compila nada (files
+     está vacío), pero el CLI de shadcn lee este archivo para resolver el
+     alias "@". Sin esto escribe los componentes en una carpeta literal "@/". */
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
 }

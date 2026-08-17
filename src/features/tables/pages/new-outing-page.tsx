@@ -4,6 +4,7 @@ import {
   FiMapPin,
   FiLink,
   FiCalendar,
+  FiCheck,
   FiCheckCircle,
   FiShoppingBag,
 } from "react-icons/fi";
@@ -15,6 +16,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LocationPicker } from "@/components/ui/location-picker";
 import { FormError } from "@/features/auth/components/form-error";
 import { useCurrentUser } from "@/features/auth/hooks/use-auth";
+import { usePlaces } from "@/features/places/hooks/use-places";
+import { useDebounced } from "@/hooks/use-debounced";
+import type { PlaceWithScore } from "@/features/places/types";
 import { getApiErrorMessage } from "@/lib/apiClient";
 import { cn } from "@/lib/utils";
 import { useTable } from "../hooks/use-tables";
@@ -52,6 +56,9 @@ export function NewOutingPage() {
 
   const [mode, setMode] = useState<"now" | "scheduled">("now");
   const [name, setName] = useState("");
+  /* Un lugar ya registrado que el usuario eligió de las sugerencias: se
+     reusa su ficha en vez de cargar otra igual. */
+  const [existing, setExisting] = useState<PlaceWithScore | null>(null);
   const [address, setAddress] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     null,
@@ -65,6 +72,18 @@ export function NewOutingPage() {
 
   const invited = mode === "scheduled";
 
+  /* Busca mientras se escribe el nombre para atajar el duplicado antes de
+     crearlo. El backend igual lo verifica, pero enterarse después de cargar
+     todo el formulario es tarde. */
+  const typedName = useDebounced(name.trim());
+  const searching = existing === null && typedName.length >= 3;
+
+  const suggestions = usePlaces(
+    { search: typedName, sort: "name", page: 1, limit: 3 },
+    { enabled: searching },
+  );
+  const matches = searching ? (suggestions.data?.items ?? []) : [];
+
   // El creador va siempre: no se elige a sí mismo.
   const members = (table.data?.members ?? []).filter(
     (member) => member.id !== currentUser?.id,
@@ -72,6 +91,23 @@ export function NewOutingPage() {
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
+
+    const when = invited ? dateTime : nowLocalIso();
+    const dateError = invited && !dateTime ? "Elegí la fecha y la hora" : undefined;
+
+    /* Con un lugar ya elegido no hay ficha que validar: solo la fecha. */
+    if (existing) {
+      setErrors({ dateTime: dateError });
+      if (dateError) return;
+
+      createOuting.mutate({
+        place: { existingId: existing.id },
+        dateTime: when,
+        guestIds: selected,
+        attendance: invited ? "invited" : "confirmed",
+      });
+      return;
+    }
 
     const next: Record<string, string | undefined> = {
       name:
@@ -84,22 +120,25 @@ export function NewOutingPage() {
           : undefined,
       city: city.trim().length < 2 ? "Ingresá la ciudad" : undefined,
       province: province.trim().length < 2 ? "Ingresá la provincia" : undefined,
-      dateTime:
-        invited && !dateTime ? "Elegí la fecha y la hora" : undefined,
+      // Obligatoria: sin punto el lugar no aparece en el mapa.
+      coords: coords ? undefined : "Marcá dónde queda para poder mapearlo",
+      dateTime: dateError,
     };
 
     setErrors(next);
-    if (Object.values(next).some(Boolean)) return;
+    if (Object.values(next).some(Boolean) || !coords) return;
 
     createOuting.mutate({
-      name: name.trim(),
-      address: address.trim(),
-      city: city.trim(),
-      province: province.trim(),
-      instagram: toInstagramHandle(instagram),
-      latitude: coords?.lat,
-      longitude: coords?.lng,
-      dateTime: invited ? dateTime : nowLocalIso(),
+      place: {
+        name: name.trim(),
+        address: address.trim(),
+        city: city.trim(),
+        province: province.trim(),
+        instagram: toInstagramHandle(instagram),
+        latitude: coords.lat,
+        longitude: coords.lng,
+      },
+      dateTime: when,
       guestIds: selected,
       attendance: invited ? "invited" : "confirmed",
     });
@@ -123,17 +162,74 @@ export function NewOutingPage() {
           />
         ) : null}
 
-        <div className="space-y-4">
-          <TextField
-            label="Nombre del restaurante"
-            placeholder="Osteria Bianca"
-            maxLength={120}
-            autoFocus
-            icon={<FiShoppingBag className="h-5 w-5" />}
-            value={name}
-            error={errors.name}
-            onChange={(e) => setName(e.target.value)}
-          />
+        {existing ? (
+          /* Lugar ya registrado: no se piden sus datos de nuevo. */
+          <div className="flex items-start gap-3 rounded-2xl bg-lilac-100 p-4">
+            <FiCheckCircle
+              className="mt-0.5 h-5 w-5 shrink-0 text-primary"
+              aria-hidden="true"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-semibold text-foreground">
+                {existing.name}
+              </p>
+              <p className="truncate text-sm text-muted">{existing.address}</p>
+              <button
+                type="button"
+                onClick={() => setExisting(null)}
+                className="mt-2 text-sm font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                Cargar otro lugar
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        <div className={cn("space-y-4", existing && "hidden")}>
+          <div>
+            <TextField
+              label="Nombre del restaurante"
+              placeholder="Osteria Bianca"
+              maxLength={120}
+              autoFocus
+              icon={<FiShoppingBag className="h-5 w-5" />}
+              value={name}
+              error={errors.name}
+              onChange={(e) => setName(e.target.value)}
+            />
+
+            {matches.length > 0 ? (
+              <div className="mt-2 rounded-2xl border border-lilac-200 bg-white p-2">
+                <p className="px-2 py-1 text-xs font-semibold text-muted">
+                  Ya está registrado, ¿es alguno de estos?
+                </p>
+                <ul>
+                  {matches.map((place) => (
+                    <li key={place.id}>
+                      <button
+                        type="button"
+                        onClick={() => setExisting(place)}
+                        className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors hover:bg-lilac-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium text-foreground">
+                            {place.name}
+                          </span>
+                          <span className="block truncate text-xs text-muted">
+                            {place.address}
+                          </span>
+                        </span>
+                        <FiCheck
+                          className="h-4 w-4 shrink-0 text-primary"
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
 
           <TextField
             label="Dirección"
@@ -178,19 +274,22 @@ export function NewOutingPage() {
             latitude={coords?.lat ?? null}
             longitude={coords?.lng ?? null}
             onPick={(lat, lng) => setCoords({ lat, lng })}
+            error={errors.coords}
           />
-
-          {invited ? (
-            <TextField
-              label="Fecha y hora"
-              type="datetime-local"
-              icon={<FiCalendar className="h-5 w-5" />}
-              value={dateTime}
-              error={errors.dateTime}
-              onChange={(e) => setDateTime(e.target.value)}
-            />
-          ) : null}
         </div>
+
+        {/* Fuera del bloque de arriba: la fecha se pide igual, se cargue un
+            lugar nuevo o se elija uno ya registrado. */}
+        {invited ? (
+          <TextField
+            label="Fecha y hora"
+            type="datetime-local"
+            icon={<FiCalendar className="h-5 w-5" />}
+            value={dateTime}
+            error={errors.dateTime}
+            onChange={(e) => setDateTime(e.target.value)}
+          />
+        ) : null}
 
         <fieldset>
           <legend className="text-sm font-semibold text-foreground">

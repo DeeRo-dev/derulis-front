@@ -4,6 +4,7 @@ import { DerulisPicker } from "@/components/ui/derulis-picker";
 import { TextArea } from "@/components/ui/text-area";
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/format";
+import { MealPhotos } from "./meal-photos";
 import type { Meal } from "../types";
 
 const COMMENT_MAX = 1000;
@@ -69,6 +70,10 @@ export function MealCard({
           onChange={(e) => setComment(e.target.value)}
         />
       </div>
+
+      {/* `meal.myDerulis`, no el estado local: la foto necesita la
+          puntuación ya guardada en el servidor, no la que estás eligiendo. */}
+      <MealPhotos mealId={meal.id} rated={meal.myDerulis !== null} />
 
       <Button
         className="mt-4 w-full"

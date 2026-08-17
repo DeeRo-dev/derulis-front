@@ -1,7 +1,25 @@
 import * as React from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { tap } from "@/lib/motion";
 
-type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+/**
+ * Los handlers de arrastre y animación de React chocan con los de framer:
+ * mismo nombre, otra firma. Se quitan del tipo — este botón no los usa.
+ */
+type ButtonProps = Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  | "onDrag"
+  | "onDragStart"
+  | "onDragEnd"
+  | "onDragEnter"
+  | "onDragLeave"
+  | "onDragOver"
+  | "onDrop"
+  | "onAnimationStart"
+  | "onAnimationEnd"
+  | "onAnimationIteration"
+> & {
   variant?: "primary" | "secondary" | "ghost";
 };
 
@@ -15,9 +33,10 @@ const variants = {
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", type = "button", ...props }, ref) => (
-    <button
+    <motion.button
       ref={ref}
       type={type}
+      whileTap={tap}
       className={cn(
         "inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full px-6",
         "text-base font-semibold transition-colors",

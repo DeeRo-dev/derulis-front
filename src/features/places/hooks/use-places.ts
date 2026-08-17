@@ -11,10 +11,14 @@ export const placesKeys = {
   reviews: (id: number) => [...placesKeys.all, "reviews", id] as const,
 };
 
-export function usePlaces(params: SearchPlacesParams) {
+export function usePlaces(
+  params: SearchPlacesParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: placesKeys.list(params),
     queryFn: () => searchPlaces(params),
+    enabled: options?.enabled ?? true,
     // Al pasar de página, mantiene la anterior visible en vez de parpadear.
     placeholderData: (previous) => previous,
   });

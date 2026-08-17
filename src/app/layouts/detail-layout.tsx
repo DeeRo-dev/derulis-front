@@ -1,5 +1,4 @@
-import { Outlet } from "react-router-dom";
-import { BottomNav } from "@/components/layout/bottom-nav";
+import { PageTransition } from "@/components/layout/page-transition";
 
 /**
  * Para pantallas de detalle: sin la cabecera global, porque cada una trae
@@ -8,10 +7,9 @@ import { BottomNav } from "@/components/layout/bottom-nav";
 export function DetailLayout() {
   return (
     <div className="min-h-svh bg-lilac-50">
-      <main className="mx-auto w-full max-w-md px-5 pb-28">
-        <Outlet />
+      <main className="mx-auto w-full max-w-md px-5 pb-12">
+        <PageTransition />
       </main>
-      <BottomNav />
     </div>
   );
 }

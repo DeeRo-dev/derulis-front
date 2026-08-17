@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -35,17 +35,65 @@ const selectedIcon = (name: string) =>
     iconAnchor: [70, 76],
   });
 
-/** Reencuadra cuando cambian los puntos (otra búsqueda, otro filtro). */
-function FitBounds({ points }: { points: MapPoint[] }) {
+/*
+ * Los tres controles de cámara de abajo se disparan por *identidad* del
+ * lugar, no por identidad del objeto: quien usa el mapa arma `points` con un
+ * `.map()` en cada render, así que comparar objetos los haría correr todo el
+ * tiempo — moviendo la cámara mientras el usuario escribe o arrastra.
+ */
+
+/** Reencuadra cuando cambia el conjunto de puntos (otra búsqueda, otro filtro). */
+function FitBounds({
+  points,
+  disabled,
+}: {
+  points: MapPoint[];
+  disabled: boolean;
+}) {
   const map = useMap();
+  const key = points.map((point) => point.id).join(",");
+  const lastFitted = useRef<string | null>(null);
 
   useEffect(() => {
-    if (points.length === 0) return;
+    if (points.length === 0 || lastFitted.current === key) return;
+
+    /* Se marca como encuadrado aunque esté deshabilitado: si no, al soltar
+       el foco (tocar otro pin) se reencuadraba y le sacaba al usuario el
+       zoom que estaba mirando. */
+    lastFitted.current = key;
+    if (disabled) return;
+
     map.fitBounds(
       L.latLngBounds(points.map((p) => [p.latitude, p.longitude])),
       { padding: [60, 60], maxZoom: 15 },
     );
-  }, [map, points]);
+    // `points` queda fuera a propósito: `key` es su versión estable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, key, disabled]);
+
+  return null;
+}
+
+/**
+ * Acerca a un lugar puntual. Es la llegada desde otra pantalla ("mostrámelo
+ * en el mapa"), donde encuadrar todos los puntos dejaría el lugar como una
+ * mota entre muchas.
+ */
+function FocusOn({ point }: { point: MapPoint | null }) {
+  const map = useMap();
+  const id = point?.id ?? null;
+  const lat = point?.latitude;
+  const lng = point?.longitude;
+
+  useEffect(() => {
+    if (id === null || lat === undefined || lng === undefined) return;
+
+    /* Sin animación: se llega con el mapa ya puesto en el lugar. El vuelo
+       desde el encuadre anterior no aporta nada.
+       Corre una sola vez por lugar: si volviera a correr, el usuario no
+       podría alejarse — cada render lo devolvería al zoom 16. */
+    map.setView([lat, lng], 16, { animate: false });
+  }, [map, id, lat, lng]);
 
   return null;
 }
@@ -53,10 +101,14 @@ function FitBounds({ points }: { points: MapPoint[] }) {
 /** Centra en el punto elegido sin cambiar el zoom. */
 function PanTo({ point }: { point: MapPoint | null }) {
   const map = useMap();
+  const id = point?.id ?? null;
+  const lat = point?.latitude;
+  const lng = point?.longitude;
 
   useEffect(() => {
-    if (point) map.panTo([point.latitude, point.longitude]);
-  }, [map, point]);
+    if (id === null || lat === undefined || lng === undefined) return;
+    map.panTo([lat, lng]);
+  }, [map, id, lat, lng]);
 
   return null;
 }
@@ -64,15 +116,19 @@ function PanTo({ point }: { point: MapPoint | null }) {
 export function PlaceMap({
   points,
   selectedId,
+  focusId,
   onSelect,
   className,
 }: {
   points: MapPoint[];
   selectedId?: number | null;
+  /** Lugar al que hay que acercarse al abrir el mapa, si se llegó por uno. */
+  focusId?: number | null;
   onSelect?: (id: number) => void;
   className?: string;
 }) {
   const selected = points.find((point) => point.id === selectedId) ?? null;
+  const focused = points.find((point) => point.id === focusId) ?? null;
 
   return (
     /* `z-0` crea un contexto de apilamiento: sin él, los paneles internos
@@ -94,7 +150,9 @@ export function PlaceMap({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <FitBounds points={points} />
+        {/* Con un lugar enfocado manda el acercamiento, no el encuadre. */}
+        <FitBounds points={points} disabled={focused !== null} />
+        <FocusOn point={focused} />
         <PanTo point={selected} />
 
         {points.map((point) => {

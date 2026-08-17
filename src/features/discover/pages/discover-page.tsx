@@ -1,10 +1,14 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { useCurrentUser } from "@/features/auth/hooks/use-auth";
-import { CreateTableCard } from "../components/create-table-card";
-import { ActiveTables } from "../components/active-tables";
 import { PlaceSearch } from "../components/place-search";
 import { TopPlaces } from "../components/top-places";
+import { itemVariants, listVariants } from "@/lib/motion";
 
+/**
+ * El home es solo descubrimiento: buscar y ver lo mejor puntuado. Armar una
+ * mesa y las mesas activas viven en /tables, a un toque desde el menú.
+ */
 export function DiscoverPage() {
   const user = useCurrentUser();
   const firstName = user?.name?.split(" ")[0];
@@ -13,18 +17,12 @@ export function DiscoverPage() {
   const [page, setPage] = useState(1);
 
   return (
-    <>
-      <h1 className="pt-2 text-sm text-muted">
+    <motion.div variants={listVariants} initial="initial" animate="animate">
+      <motion.h1 variants={itemVariants} className="pt-2 text-sm text-muted">
         {firstName ? `Hola, ${firstName}` : "Hola"}
-      </h1>
+      </motion.h1>
 
-      <div className="mt-3">
-        <CreateTableCard />
-      </div>
-
-      <ActiveTables />
-
-      <section className="mt-10">
+      <motion.section variants={itemVariants} className="mt-6">
         <h2 className="text-center text-base font-medium text-muted">
           Descubrí nuevos sabores cerca tuyo
         </h2>
@@ -37,9 +35,11 @@ export function DiscoverPage() {
             setPage(1);
           }}
         />
-      </section>
+      </motion.section>
 
-      <TopPlaces search={search} page={page} onPageChange={setPage} />
-    </>
+      <motion.div variants={itemVariants}>
+        <TopPlaces search={search} page={page} onPageChange={setPage} />
+      </motion.div>
+    </motion.div>
   );
 }

@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { FiSearch, FiCrosshair, FiX, FiList } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { PlaceMap } from "@/components/ui/place-map";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import type { MapPoint } from "@/lib/map";
 import { distanceKm } from "@/lib/geo";
-import { usePlaces } from "@/features/places/hooks/use-places";
+import { usePlace, usePlaces } from "@/features/places/hooks/use-places";
 import { cn } from "@/lib/utils";
 import { MapPlaceCard } from "../components/map-place-card";
 
@@ -14,10 +15,23 @@ const MAP_LIMIT = 50;
 type Filter = "top" | "near" | null;
 
 export function SearchPage() {
+  const [params] = useSearchParams();
+
+  /* Se llega acá desde la dirección de un lugar: `/search?place=12`. */
+  const [pinnedId] = useState<number | null>(() => {
+    const raw = Number(params.get("place"));
+    return Number.isInteger(raw) && raw > 0 ? raw : null;
+  });
+
+  /* El foco es solo la cámara y dura hasta que el usuario hace algo: busca,
+     filtra o toca otro pin. El pin en sí (`pinnedId`) se queda: si se fuera
+     del mapa al tocar otro lugar, el que vino a ver desaparecería. */
+  const [focusId, setFocusId] = useState<number | null>(pinnedId);
+
   const [draft, setDraft] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>(null);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(pinnedId);
   const [me, setMe] = useState<{ lat: number; lng: number } | null>(null);
   const [geoError, setGeoError] = useState<string>();
 
@@ -28,15 +42,24 @@ export function SearchPage() {
     limit: MAP_LIMIT,
   });
 
+  /* El listado trae 50 lugares como mucho: el que vino por la URL puede no
+     estar entre ellos. Se pide aparte para que el pin exista siempre. */
+  const pinnedPlace = usePlace(pinnedId ?? Number.NaN);
+
   /* Solo los que tienen punto cargado pueden ir al mapa. */
-  const located = useMemo(
-    () =>
-      (query.data?.items ?? []).filter(
-        (place): place is typeof place & { latitude: number; longitude: number } =>
-          place.latitude !== null && place.longitude !== null,
-      ),
-    [query.data],
-  );
+  const located = useMemo(() => {
+    const items = [...(query.data?.items ?? [])];
+
+    const pinned = pinnedPlace.data;
+    if (pinned && !items.some((place) => place.id === pinned.id)) {
+      items.push(pinned);
+    }
+
+    return items.filter(
+      (place): place is typeof place & { latitude: number; longitude: number } =>
+        place.latitude !== null && place.longitude !== null,
+    );
+  }, [query.data, pinnedPlace.data]);
 
   const ordered = useMemo(() => {
     if (filter !== "near" || !me) return located;
@@ -80,19 +103,25 @@ export function SearchPage() {
       <PlaceMap
         points={points}
         selectedId={selectedId}
-        onSelect={setSelectedId}
+        focusId={focusId}
+        onSelect={(id) => {
+          setFocusId(null);
+          setSelectedId(id);
+        }}
         className="absolute inset-0"
       />
 
       {/* Buscador flotante */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 px-4 pt-4">
+        <div className="flex items-center gap-2">
         <form
           role="search"
-          className="pointer-events-auto flex items-center gap-2 rounded-full bg-white p-2 pl-4 shadow-xl shadow-lilac-900/10"
+          className="pointer-events-auto flex min-w-0 flex-1 items-center gap-2 rounded-full bg-white p-2 pl-4 shadow-xl shadow-lilac-900/10"
           onSubmit={(event) => {
             event.preventDefault();
             setSearch(draft.trim());
             setSelectedId(null);
+            setFocusId(null);
           }}
         >
           <FiSearch className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
@@ -114,6 +143,7 @@ export function SearchPage() {
               onClick={() => {
                 setDraft("");
                 setSearch("");
+                setFocusId(null);
               }}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-lilac-100"
             >
@@ -128,6 +158,12 @@ export function SearchPage() {
             <FiList className="h-5 w-5" aria-hidden="true" />
           </Link>
         </form>
+
+        {/* Esta pantalla no tiene cabecera, así que sin este botón el mapa
+            sería un callejón sin salida. Va a la derecha, igual que en el
+            resto de la app. */}
+        <SidebarTrigger className="pointer-events-auto h-12 w-12 shrink-0 rounded-full bg-white shadow-xl shadow-lilac-900/10 hover:bg-lilac-50" />
+        </div>
 
         {/* Filtros */}
         <div className="pointer-events-auto -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
@@ -144,6 +180,7 @@ export function SearchPage() {
               onClick={() => {
                 const next = filter === key ? null : key;
                 setFilter(next);
+                setFocusId(null);
                 if (next === "near" && !me) locate();
               }}
               className={cn(
@@ -175,14 +212,15 @@ export function SearchPage() {
         aria-label="Centrar en mi ubicación"
         className={cn(
           "absolute right-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-xl transition hover:bg-lilac-50",
-          selected ? "bottom-56" : "bottom-32",
+          // Ya no hay nav abajo: los controles bajan hasta el borde.
+          selected ? "bottom-36" : "bottom-6",
         )}
       >
         <FiCrosshair className="h-5 w-5 text-lilac-700" aria-hidden="true" />
       </button>
 
       {/* Tarjeta del lugar elegido */}
-      <div className="absolute inset-x-0 bottom-24 z-10 px-4">
+      <div className="absolute inset-x-0 bottom-6 z-10 px-4">
         {selected ? (
           <MapPlaceCard
             place={selected}

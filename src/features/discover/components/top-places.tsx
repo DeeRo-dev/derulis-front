@@ -1,10 +1,6 @@
 import { Link } from "react-router-dom";
-import {
-  FiMapPin,
-  FiWifiOff,
-  FiArrowRight,
-  FiAlertCircle,
-} from "react-icons/fi";
+import { AnimatePresence, motion } from "framer-motion";
+import { FiMapPin, FiWifiOff, FiAlertCircle } from "react-icons/fi";
 import { PiForkKnifeFill } from "react-icons/pi";
 import { Button } from "@/components/ui/button";
 import { DerulisRating } from "@/components/ui/derulis-rating";
@@ -12,6 +8,7 @@ import { PlacePhoto } from "@/components/ui/place-photo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePlaces } from "@/features/places/hooks/use-places";
 import { getApiErrorMessage, isNetworkError } from "@/lib/apiClient";
+import { fadeVariants, itemVariants, listVariants, tap } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { PlaceWithScore } from "@/features/places/types";
 
@@ -24,7 +21,11 @@ function location(place: PlaceWithScore): string {
 
 function PlaceCard({ place }: { place: PlaceWithScore }) {
   return (
-    <article className="relative overflow-hidden rounded-3xl bg-white p-3 shadow-lg shadow-lilac-200/50 transition focus-within:ring-2 focus-within:ring-primary hover:shadow-xl">
+    <motion.article
+      variants={itemVariants}
+      whileTap={tap}
+      className="relative overflow-hidden rounded-3xl bg-white p-3 shadow-lg shadow-lilac-200/50 transition-shadow focus-within:ring-2 focus-within:ring-primary hover:shadow-xl"
+    >
       <div className="relative h-44 overflow-hidden rounded-2xl">
         <PlacePhoto src={place.photoUrl} alt={place.name} />
         {place.derulis !== null ? (
@@ -53,13 +54,21 @@ function PlaceCard({ place }: { place: PlaceWithScore }) {
           <span className="truncate">{location(place)}</span>
         </p>
 
+        {/* Una reseña suelta de la comunidad, cortada a dos líneas: alcanza
+            para darse una idea del lugar sin desbalancear la tarjeta. */}
+        {place.comment ? (
+          <p className="mt-3 line-clamp-2 text-sm leading-6 text-foreground/80">
+            {place.comment}
+          </p>
+        ) : null}
+
         {place.derulis !== null ? (
           <DerulisRating value={place.derulis} className="mt-3" />
         ) : (
           <p className="mt-3 text-sm text-muted">Todavía sin reseñas</p>
         )}
       </div>
-    </article>
+    </motion.article>
   );
 }
 
@@ -83,40 +92,31 @@ export function TopPlaces({
   const totalPages = query.data ? Math.ceil(query.data.total / PER_PAGE) : 0;
 
   return (
-    <section className="mt-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-bold tracking-tight text-foreground">
-            {search ? "Resultados" : "Mejores reseñas"}
-          </h2>
-          <p className="text-sm text-muted">
-            {search
-              ? `${query.data?.total ?? 0} lugares encontrados`
-              : "Lugares destacados por la comunidad"}
-          </p>
-        </div>
-
-        {!search && query.data && query.data.total > PER_PAGE ? (
-          <button
-            type="button"
-            onClick={() => onPageChange(page + 1)}
-            disabled={!query.data.hasMore}
-            className="flex shrink-0 items-center gap-1 text-sm font-semibold text-primary transition hover:underline disabled:opacity-40 disabled:hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            Ver más
-            <FiArrowRight className="h-4 w-4" aria-hidden="true" />
-          </button>
-        ) : null}
+    <section className="mt-8">
+      <div>
+        <h2 className="text-lg font-bold tracking-tight text-foreground">
+          {search ? "Resultados" : "Mejores reseñas"}
+        </h2>
+        <p className="text-sm text-muted">
+          {search
+            ? `${query.data?.total ?? 0} lugares encontrados`
+            : "Lugares destacados por la comunidad"}
+        </p>
       </div>
 
       <div className="mt-4 space-y-5">
         {query.isPending ? (
           <>
-            <Skeleton className="h-72 rounded-3xl" />
-            <Skeleton className="h-72 rounded-3xl" />
+            <Skeleton className="h-80 rounded-3xl" />
+            <Skeleton className="h-80 rounded-3xl" />
           </>
         ) : query.isError ? (
-          <div className="rounded-3xl bg-white p-8 text-center shadow-lg shadow-lilac-200/50">
+          <motion.div
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            className="rounded-3xl bg-white p-8 text-center shadow-lg shadow-lilac-200/50"
+          >
             {isNetworkError(query.error) ? (
               <>
                 <FiWifiOff
@@ -154,9 +154,14 @@ export function TopPlaces({
             >
               Reintentar
             </Button>
-          </div>
+          </motion.div>
         ) : query.data.items.length === 0 ? (
-          <div className="rounded-3xl bg-white p-8 text-center shadow-lg shadow-lilac-200/50">
+          <motion.div
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            className="rounded-3xl bg-white p-8 text-center shadow-lg shadow-lilac-200/50"
+          >
             <p className="font-semibold text-foreground">
               {search ? "No encontramos nada" : "Todavía no hay reseñas"}
             </p>
@@ -165,11 +170,25 @@ export function TopPlaces({
                 ? "Probá con otro nombre."
                 : "Registrá un lugar y puntuá lo que comiste para empezar."}
             </p>
-          </div>
+          </motion.div>
         ) : (
-          query.data.items.map((place) => (
-            <PlaceCard key={place.id} place={place} />
-          ))
+          /* La key incluye página y búsqueda: al cambiar de una a otra, la
+             tanda de tarjetas vuelve a entrar escalonada en vez de mutar
+             el texto en su lugar. */
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${search}-${page}`}
+              variants={listVariants}
+              initial="initial"
+              animate="animate"
+              exit={{ opacity: 0, transition: { duration: 0.12 } }}
+              className="space-y-5"
+            >
+              {query.data.items.map((place) => (
+                <PlaceCard key={place.id} place={place} />
+              ))}
+            </motion.div>
+          </AnimatePresence>
         )}
       </div>
 
@@ -181,18 +200,21 @@ export function TopPlaces({
         >
           {Array.from({ length: totalPages }, (_, index) => index + 1).map(
             (number) => (
-              <button
+              <motion.button
                 key={number}
                 type="button"
                 role="tab"
                 aria-selected={number === page}
                 aria-label={`Página ${number}`}
                 onClick={() => onPageChange(number)}
+                whileTap={{ scale: 0.85 }}
+                animate={{ width: number === page ? 24 : 8 }}
+                transition={{ duration: 0.2 }}
                 className={cn(
-                  "h-2 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                  "h-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                   number === page
-                    ? "w-6 bg-primary"
-                    : "w-2 bg-lilac-300 hover:bg-lilac-400",
+                    ? "bg-primary"
+                    : "bg-lilac-300 transition-colors hover:bg-lilac-400",
                 )}
               />
             ),

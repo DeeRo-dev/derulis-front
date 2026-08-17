@@ -1,4 +1,11 @@
-/** El número grande: promedio global del lugar. */
+import { PiForkKnifeFill } from "react-icons/pi";
+
+/**
+ * El promedio del lugar, al lado del título de las reseñas.
+ *
+ * Antes era un círculo grande y centrado, pero empujaba las reseñas —
+ * lo que la gente viene a leer — fuera de la primera pantalla.
+ */
 export function PlaceScore({
   derulis,
   visitCount,
@@ -8,25 +15,29 @@ export function PlaceScore({
 }) {
   const mesas = visitCount === 1 ? "mesa" : "mesas";
 
-  return (
-    <div className="py-8 text-center">
-      <div className="mx-auto flex h-36 w-36 items-center justify-center rounded-full bg-lilac-100 ring-8 ring-lilac-50">
-        {derulis === null ? (
-          <span className="px-4 text-sm font-medium text-muted">
-            Sin puntuar
-          </span>
-        ) : (
-          <span className="text-5xl font-bold tracking-tight text-primary">
-            {derulis.toFixed(1)}
-          </span>
-        )}
-      </div>
+  if (derulis === null) {
+    return (
+      <span className="shrink-0 rounded-full bg-lilac-100 px-3 py-1.5 text-sm font-medium text-muted">
+        Sin puntuar
+      </span>
+    );
+  }
 
-      <p className="mt-4 text-sm text-muted">
-        {visitCount === 0
-          ? "Todavía no lo visitó ninguna mesa"
-          : `Promedio de ${visitCount} ${mesas}`}
-      </p>
+  return (
+    <div className="flex shrink-0 items-center gap-2.5 rounded-full bg-lilac-100 py-1.5 pl-1.5 pr-4">
+      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-base font-bold text-primary-foreground">
+        {derulis.toFixed(1)}
+      </span>
+      <span className="text-xs leading-tight text-muted">
+        <span className="flex items-center gap-1 font-semibold text-foreground">
+          <PiForkKnifeFill
+            className="h-3 w-3 text-derulis"
+            aria-hidden="true"
+          />
+          Promedio
+        </span>
+        {visitCount} {mesas}
+      </span>
     </div>
   );
 }

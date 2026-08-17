@@ -1,7 +1,13 @@
+import { useSyncExternalStore } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { queryClient } from "@/lib/queryClient";
-import { clearSession, getStoredUser, saveSession } from "@/lib/auth-storage";
+import {
+  clearSession,
+  getStoredUser,
+  saveSession,
+  subscribeToSession,
+} from "@/lib/auth-storage";
 import * as authApi from "../api/auth.api";
 import type { AuthResponse } from "../api/auth.api";
 
@@ -44,6 +50,10 @@ export function useLogout() {
   };
 }
 
+/**
+ * El usuario de la sesión. Se suscribe al almacenamiento para que un cambio
+ * —subir un avatar, cerrar sesión en otra pestaña— repinte lo que lo usa.
+ */
 export function useCurrentUser() {
-  return getStoredUser();
+  return useSyncExternalStore(subscribeToSession, getStoredUser);
 }

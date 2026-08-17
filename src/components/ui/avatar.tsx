@@ -5,6 +5,8 @@ const SIZES = {
   sm: "h-6 w-6 text-[10px]",
   md: "h-8 w-8 text-xs",
   lg: "h-12 w-12 text-base",
+  /** Perfil: es el único lugar donde la foto es protagonista. */
+  xl: "h-24 w-24 text-2xl",
 };
 
 type AvatarProps = {

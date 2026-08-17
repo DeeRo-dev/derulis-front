@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { PublicLayout } from "../layouts/public-layout";
+import { AppShell } from "../layouts/app-shell";
 import { AppLayout } from "../layouts/app-layout";
 import { DetailLayout } from "../layouts/detail-layout";
 import { MapLayout } from "../layouts/map-layout";
@@ -39,12 +40,34 @@ export const appRouter = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       {
-        // Pantallas de pestaña: con cabecera global.
+        // El sidebar es común a todas las pantallas con sesión iniciada.
+        element: <AppShell />,
+        children: [
+      {
+        // Pantallas de sección: con cabecera global.
         element: <AppLayout />,
         children: [
           { path: "discover", element: <DiscoverPage /> },
           { path: "profile", element: <ProfilePage /> },
           { path: "tables", element: <TablesPage /> },
+          {
+            path: "reviews",
+            element: (
+              <ComingSoon
+                title="Mis Reseñas"
+                description="Todo lo que puntuaste, junto y ordenado por fecha."
+              />
+            ),
+          },
+          {
+            path: "favorites",
+            element: (
+              <ComingSoon
+                title="Favoritos"
+                description="Los lugares que guardaste para volver."
+              />
+            ),
+          },
         ],
       },
       {
@@ -83,6 +106,8 @@ export const appRouter = createBrowserRouter([
             path: "tables/:tableId/outings/new",
             element: <NewOutingPage />,
           },
+        ],
+      },
         ],
       },
     ],

@@ -1,5 +1,5 @@
-import { Outlet } from "react-router-dom";
 import hero from "@/assets/hero.png";
+import { PageTransition } from "@/components/layout/page-transition";
 
 export function PublicLayout() {
   return (
@@ -26,7 +26,7 @@ export function PublicLayout() {
 
         <section className="flex flex-1 items-center justify-center px-5 py-8 lg:px-10">
           <div className="w-full max-w-md">
-            <Outlet />
+            <PageTransition />
           </div>
         </section>
       </div>

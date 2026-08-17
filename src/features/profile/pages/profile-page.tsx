@@ -3,8 +3,15 @@ import { FiMapPin, FiUsers } from "react-icons/fi";
 import { PiForkKnifeFill, PiNotePencilFill } from "react-icons/pi";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { ImagePicker } from "@/components/ui/image-picker";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FormError } from "@/features/auth/components/form-error";
 import { useCurrentUser, useLogout } from "@/features/auth/hooks/use-auth";
+import {
+  useDeleteAvatar,
+  useUploadAvatar,
+} from "@/features/images/hooks/use-images";
+import { getApiErrorMessage } from "@/lib/apiClient";
 import { getMyStats } from "../api/profile.api";
 import type { UserStats } from "../api/profile.api";
 
@@ -38,6 +45,8 @@ const CARDS = [
 export function ProfilePage() {
   const user = useCurrentUser();
   const logout = useLogout();
+  const uploadAvatar = useUploadAvatar();
+  const removeAvatar = useDeleteAvatar();
 
   const stats = useQuery({
     queryKey: ["users", "me", "stats"],
@@ -50,13 +59,49 @@ export function ProfilePage() {
         <Avatar
           name={user?.name ?? "?"}
           src={user?.avatar}
-          size="lg"
+          size="xl"
           className="mx-auto"
         />
         <h1 className="mt-3 text-xl font-bold tracking-tight text-foreground">
           {user?.name ?? "Invitado"}
         </h1>
         <p className="mt-1 text-sm text-muted">{user?.email}</p>
+
+        <div className="mt-5 flex flex-col items-center gap-2">
+          <ImagePicker
+            variant="outline"
+            label={user?.avatar ? "Cambiar foto" : "Subir foto"}
+            busy={uploadAvatar.isPending}
+            onPick={(file) => uploadAvatar.mutate(file)}
+          />
+
+          {user?.avatar ? (
+            <button
+              type="button"
+              onClick={() => removeAvatar.mutate()}
+              disabled={removeAvatar.isPending}
+              className="text-sm font-semibold text-muted transition-colors hover:text-error disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              {removeAvatar.isPending ? "Quitando…" : "Quitar foto"}
+            </button>
+          ) : null}
+        </div>
+
+        <FormError
+          message={
+            uploadAvatar.isError
+              ? getApiErrorMessage(
+                  uploadAvatar.error,
+                  "No pudimos subir la foto.",
+                )
+              : removeAvatar.isError
+                ? getApiErrorMessage(
+                    removeAvatar.error,
+                    "No pudimos quitar la foto.",
+                  )
+                : null
+          }
+        />
       </div>
 
       <h2 className="mt-8 text-lg font-bold tracking-tight text-foreground">

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "comment": "El ruteo es del lado del cliente: sin esto, entrar directo a /search o compartir /places/14 devuelve 404, porque en el servidor esos archivos no existen. Los assets reales se sirven antes de aplicar esta regla.",
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -1,6 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiUserPlus } from "react-icons/fi";
+import { FiArrowLeft, FiUserPlus, FiTrash2 } from "react-icons/fi";
 import { TablePhoto } from "@/components/ui/table-photo";
+import { ImagePicker } from "@/components/ui/image-picker";
+import {
+  useDeleteTableImage,
+  useUploadTableImage,
+} from "@/features/images/hooks/use-images";
+import { getApiErrorMessage } from "@/lib/apiClient";
 
 /**
  * Cabecera del detalle: la foto ocupa el ancho completo y los controles
@@ -20,6 +26,8 @@ export function TableHero({
   fallbackPhotoUrl?: string | null;
 }) {
   const navigate = useNavigate();
+  const uploadPhoto = useUploadTableImage(tableId);
+  const removePhoto = useDeleteTableImage(tableId);
 
   return (
     <div className="relative -mx-5 h-52 overflow-hidden rounded-b-3xl">
@@ -49,6 +57,41 @@ export function TableHero({
           <FiUserPlus className="h-5 w-5" aria-hidden="true" />
         </Link>
       </div>
+
+      {/* Abajo a la derecha: no compite con los controles de arriba y queda
+          sobre la parte más oscura del degradado. */}
+      <div className="absolute bottom-3 right-4 flex items-center gap-2">
+        {photoUrl ? (
+          <button
+            type="button"
+            onClick={() => removePhoto.mutate()}
+            disabled={removePhoto.isPending}
+            aria-label="Quitar foto de la mesa"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-muted shadow-lg backdrop-blur transition hover:text-error disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+          </button>
+        ) : null}
+
+        <ImagePicker
+          variant="ghost"
+          label={photoUrl ? "Cambiar" : "Subir foto"}
+          busy={uploadPhoto.isPending}
+          onPick={(file) => uploadPhoto.mutate(file)}
+        />
+      </div>
+
+      {uploadPhoto.isError || removePhoto.isError ? (
+        <p
+          role="alert"
+          className="absolute inset-x-4 bottom-16 rounded-xl bg-white/95 px-3 py-2 text-center text-sm text-error shadow backdrop-blur"
+        >
+          {getApiErrorMessage(
+            uploadPhoto.error ?? removePhoto.error,
+            "No pudimos cambiar la foto.",
+          )}
+        </p>
+      ) : null}
     </div>
   );
 }

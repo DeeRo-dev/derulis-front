@@ -49,6 +49,9 @@ export function getApiStatus(error: unknown): number | undefined {
 
 export const isNotFound = (error: unknown) => getApiStatus(error) === 404;
 
+/** Autenticado pero sin permiso. Ej.: subir fotos de un lugar donde no fuiste. */
+export const isForbidden = (error: unknown) => getApiStatus(error) === 403;
+
 /**
  * Solo es problema de red si axios falló SIN respuesta.
  *

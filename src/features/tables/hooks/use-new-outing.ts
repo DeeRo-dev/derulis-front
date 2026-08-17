@@ -5,25 +5,35 @@ import { placesKeys } from "@/features/places/hooks/use-places";
 import { createOuting } from "../api/outings.api";
 import { tablesKeys } from "./use-tables";
 
-export type NewOutingInput = {
+/** Un lugar nuevo. Las coordenadas no son opcionales: sin punto no se mapea. */
+export type NewPlaceInput = {
   name: string;
   address: string;
   city: string;
   province: string;
   instagram?: string;
-  latitude?: number;
-  longitude?: number;
+  latitude: number;
+  longitude: number;
+};
+
+export type NewOutingInput = {
+  /** El lugar ya registrado que se eligió, o los datos de uno nuevo. */
+  place: { existingId: number } | NewPlaceInput;
   dateTime: string;
   guestIds: number[];
   attendance: "confirmed" | "invited";
 };
 
 /**
- * Crea el lugar y la salida en un solo gesto del usuario.
+ * Crea la salida y, si hace falta, el lugar.
  *
  * Son dos llamadas porque el backend no tiene un endpoint combinado. Si la
  * segunda falla queda un lugar sin salida, lo cual es inofensivo: los
  * lugares son públicos y reutilizables, no basura huérfana.
+ *
+ * Cuando el usuario elige un lugar de las sugerencias no se crea nada: se
+ * reusa su id. Y si igual manda uno nuevo que ya existía, el backend
+ * devuelve el existente en vez de duplicarlo.
  */
 export function useCreateOuting(tableId: number) {
   const queryClient = useQueryClient();
@@ -31,18 +41,13 @@ export function useCreateOuting(tableId: number) {
 
   return useMutation({
     mutationFn: async (input: NewOutingInput) => {
-      const place = await createPlace({
-        name: input.name,
-        address: input.address,
-        city: input.city,
-        province: input.province,
-        instagram: input.instagram,
-        latitude: input.latitude,
-        longitude: input.longitude,
-      });
+      const placeId =
+        "existingId" in input.place
+          ? input.place.existingId
+          : (await createPlace(input.place)).id;
 
       return createOuting(tableId, {
-        placeId: place.id,
+        placeId,
         dateTime: input.dateTime,
         guestIds: input.guestIds,
         attendance: input.attendance,

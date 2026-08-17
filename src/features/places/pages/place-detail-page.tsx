@@ -1,13 +1,51 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { FiShare2, FiCheck, FiMapPin, FiInstagram } from "react-icons/fi";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  FiShare2,
+  FiCheck,
+  FiMapPin,
+  FiInstagram,
+  FiExternalLink,
+  FiCalendar,
+  FiChevronRight,
+} from "react-icons/fi";
+import { PiForkKnifeFill } from "react-icons/pi";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PlacePhoto } from "@/components/ui/place-photo";
 import { DetailTopBar } from "@/components/layout/detail-top-bar";
 import { isNotFound } from "@/lib/apiClient";
+import { priceLevel } from "@/lib/format";
+import { EASE, itemVariants, listVariants } from "@/lib/motion";
 import { usePlaceReviews } from "../hooks/use-places";
+import { useLocatePlace } from "../hooks/use-locate-place";
 import { PlaceScore } from "../components/place-score";
 import { TableReviewCard } from "../components/table-review-card";
+import { ScheduleVisitSheet } from "../components/schedule-visit-sheet";
+import { PlaceGallery } from "../components/place-gallery";
+import type { TableReview } from "../types";
+
+/** Un lugar es "muy bien puntuado" a partir de 4.5, como en el listado. */
+const HIGHLY_RATED = 4.5;
+
+/**
+ * "$$$" a partir de lo que gastaron las mesas que ya fueron. Es un dato
+ * real, no una etiqueta cargada a mano: sale del gasto por comensal
+ * promediado entre las visitas que anotaron cuánto salió.
+ */
+function priceRange(tables: TableReview[]): string | null {
+  const perDiner = tables
+    .filter((table) => table.totalSpend !== null && table.diners.length > 0)
+    .map((table) => table.totalSpend! / table.diners.length);
+
+  if (perDiner.length === 0) return null;
+
+  const average =
+    perDiner.reduce((total, value) => total + value, 0) / perDiner.length;
+
+  return priceLevel(average);
+}
 
 function ShareButton({ name }: { name: string }) {
   const [copied, setCopied] = useState(false);
@@ -47,15 +85,24 @@ export function PlaceDetailPage() {
   const navigate = useNavigate();
   const { placeId } = useParams();
   const { data, isPending, isError, error } = usePlaceReviews(Number(placeId));
+  const [scheduling, setScheduling] = useState(false);
+
+  /* Los lugares cargados sin marcar el punto en el mapa no se pueden
+     señalar. Se intenta ubicarlos por su dirección; si sale, la dirección
+     pasa a ser un link al mapa. Va antes de los returns tempranos porque
+     los hooks no pueden quedar condicionados. */
+  const needsLocation = data
+    ? data.place.latitude === null || data.place.longitude === null
+    : false;
+  useLocatePlace(Number(placeId), needsLocation);
 
   if (isPending) {
     return (
       <section>
         <DetailTopBar />
-        <div className="mt-6 space-y-4">
-          <Skeleton className="mx-auto h-36 w-36 rounded-full" />
-          <Skeleton className="mx-auto h-4 w-40" />
-          <Skeleton className="mt-6 h-40 rounded-3xl" />
+        <div className="space-y-4">
+          <Skeleton className="-mx-5 h-64 rounded-b-3xl" />
+          <Skeleton className="h-32 rounded-3xl" />
           <Skeleton className="h-40 rounded-3xl" />
         </div>
       </section>
@@ -88,51 +135,195 @@ export function PlaceDetailPage() {
   }
 
   const { place, derulis, visitCount, tables } = data;
+  const price = priceRange(tables);
+  const area = [place.city, place.province].filter(Boolean).join(", ");
+  const mappable = place.latitude !== null && place.longitude !== null;
+  /* El backend todavía no modela las etiquetas de cocina: hasta que existan,
+     el subtítulo se arma con lo que sí hay. */
+  const subtitle = [place.cuisines.join(", "), price]
+    .filter(Boolean)
+    .join(" • ");
 
   return (
-    <section>
+    <motion.section variants={listVariants} initial="initial" animate="animate">
       <DetailTopBar>
         <ShareButton name={place.name} />
       </DetailTopBar>
 
-      <h1 className="text-center text-2xl font-bold tracking-tight text-primary">
-        {place.name}
-      </h1>
+      {/* -mx-5: la foto sangra hasta los bordes de la pantalla. */}
+      <motion.div
+        variants={itemVariants}
+        className="relative -mx-5 h-64 overflow-hidden rounded-b-3xl"
+      >
+        <motion.div
+          initial={{ scale: 1.08 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.7, ease: EASE }}
+          className="h-full w-full"
+        >
+          <PlacePhoto src={place.photoUrl} alt={place.name} />
+        </motion.div>
 
-      <div className="mt-2 flex flex-col items-center gap-1 text-sm text-muted">
-        <p className="flex items-center gap-1.5">
-          <FiMapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          {place.address}
-        </p>
-        {place.instagram ? (
-          <a
-            href={`https://instagram.com/${place.instagram}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 font-medium text-primary hover:underline"
+        {/* El degradado no decora: sin él el nombre no se lee sobre fotos claras. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent"
+        />
+
+        <div className="absolute inset-x-0 bottom-0 p-5">
+          <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow">
+            {place.name}
+          </h1>
+          {subtitle ? (
+            <p className="mt-1 text-sm font-medium text-white/90">{subtitle}</p>
+          ) : null}
+        </div>
+      </motion.div>
+
+      <motion.section
+        variants={itemVariants}
+        className="mt-5 rounded-3xl bg-white p-5 shadow-lg shadow-lilac-200/50"
+      >
+        <h2 className="text-lg font-bold tracking-tight text-foreground">
+          Ubicación y contacto
+        </h2>
+
+        {/* Sin coordenadas cargadas no hay nada que señalar en el mapa: la
+            dirección queda como texto en vez de un link que no lleva a nada. */}
+        {mappable ? (
+          <Link
+            to={`/search?place=${place.id}`}
+            className="mt-4 flex items-center gap-3 rounded-xl transition-colors hover:bg-lilac-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <FiInstagram className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            @{place.instagram}
-          </a>
-        ) : null}
-      </div>
+            <span
+              aria-hidden="true"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-lilac-100 text-lilac-700"
+            >
+              <FiMapPin className="h-4 w-4" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm text-foreground">
+                {place.address}
+              </span>
+              <span className="block text-xs text-primary">
+                {area ? `${area} · ` : ""}Ver en el mapa
+              </span>
+            </span>
+            <FiChevronRight
+              className="h-4 w-4 shrink-0 text-muted"
+              aria-hidden="true"
+            />
+          </Link>
+        ) : (
+          <div className="mt-4 flex items-start gap-3">
+            <span
+              aria-hidden="true"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-lilac-100 text-lilac-700"
+            >
+              <FiMapPin className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm text-foreground">{place.address}</p>
+              {area ? <p className="text-xs text-muted">{area}</p> : null}
+            </div>
+          </div>
+        )}
 
-      <PlaceScore derulis={derulis} visitCount={visitCount} />
+        {place.instagram ? (
+          <>
+            <hr className="my-4 border-lilac-100" />
+            <a
+              href={`https://instagram.com/${place.instagram}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-xl transition-colors hover:bg-lilac-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <span
+                aria-hidden="true"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-lilac-100 text-lilac-700"
+              >
+                <FiInstagram className="h-4 w-4" />
+              </span>
+              <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                @{place.instagram}
+              </span>
+              <FiExternalLink
+                className="h-4 w-4 shrink-0 text-muted"
+                aria-hidden="true"
+              />
+            </a>
+          </>
+        ) : null}
+      </motion.section>
+
+      <motion.section
+        variants={itemVariants}
+        className="mt-4 rounded-3xl bg-lilac-100 p-5"
+      >
+        <h2 className="text-lg font-bold tracking-tight text-primary">
+          Reservar una mesa
+        </h2>
+        <p className="mt-1 text-sm leading-6 text-muted">
+          Elegí con qué mesa venís y cuándo. Cada comensal recibe la invitación
+          y confirma si va.
+        </p>
+
+        <Button className="mt-4 w-full" onClick={() => setScheduling(true)}>
+          <FiCalendar className="h-5 w-5" aria-hidden="true" />
+          Agendar cita
+        </Button>
+      </motion.section>
+
+      {derulis !== null && derulis >= HIGHLY_RATED ? (
+        <motion.div variants={itemVariants} className="mt-4">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-derulis/40 bg-derulis/10 px-3 py-1 text-xs font-semibold text-foreground">
+            <PiForkKnifeFill
+              className="h-3.5 w-3.5 text-derulis"
+              aria-hidden="true"
+            />
+            Muy bien puntuado
+          </span>
+        </motion.div>
+      ) : null}
+
+      <motion.div variants={itemVariants}>
+        <PlaceGallery placeId={place.id} />
+      </motion.div>
+
+      <motion.div
+        variants={itemVariants}
+        className="mt-8 flex items-center justify-between gap-3"
+      >
+        <h2 className="text-xl font-bold tracking-tight text-foreground">
+          Reseñas por mesa
+        </h2>
+        <PlaceScore derulis={derulis} visitCount={visitCount} />
+      </motion.div>
 
       {tables.length === 0 ? (
-        <div className="rounded-3xl bg-white p-8 text-center shadow-lg shadow-lilac-200/50">
+        <motion.div
+          variants={itemVariants}
+          className="mt-4 rounded-3xl bg-white p-8 text-center shadow-lg shadow-lilac-200/50"
+        >
           <p className="font-semibold text-foreground">Todavía sin reseñas</p>
           <p className="mt-1 text-sm text-muted">
             Cuando una mesa lo visite y puntúe, va a aparecer acá.
           </p>
-        </div>
+        </motion.div>
       ) : (
-        <div className="space-y-5">
+        <motion.div variants={listVariants} className="mt-4 space-y-5">
           {tables.map((review) => (
             <TableReviewCard key={review.outingId} review={review} />
           ))}
-        </div>
+        </motion.div>
       )}
-    </section>
+
+      <ScheduleVisitSheet
+        placeId={place.id}
+        placeName={place.name}
+        open={scheduling}
+        onOpenChange={setScheduling}
+      />
+    </motion.section>
   );
 }
