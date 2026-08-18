@@ -73,3 +73,16 @@ export default defineConfig([
 ])
 
 ```
+
+## Despliegue (Vercel)
+
+`vercel.json` reescribe todas las rutas a `/index.html`. Sin eso, el ruteo
+del lado del cliente se rompe al entrar directo: `/search` o un `/places/14`
+compartido devuelven 404, porque en el servidor esos archivos no existen.
+Los assets reales (`/assets/*`, `/encuentro.jpg`) se sirven antes de que se
+aplique la regla, así que no los tapa.
+
+Ese archivo se valida contra el schema de Vercel y **no admite propiedades
+de más**: un `"comment"` dentro del rewrite hace fallar el deploy entero con
+`rewrites[0] should NOT have additional property`. Por eso esta explicación
+vive acá y no ahí — JSON no tiene comentarios.
