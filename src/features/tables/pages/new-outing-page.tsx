@@ -17,6 +17,7 @@ import { LocationPicker } from "@/components/ui/location-picker";
 import { FormError } from "@/features/auth/components/form-error";
 import { useCurrentUser } from "@/features/auth/hooks/use-auth";
 import { usePlaces } from "@/features/places/hooks/use-places";
+import { toInstagramHandle } from "@/features/places/lib/instagram";
 import { useDebounced } from "@/hooks/use-debounced";
 import type { PlaceWithScore } from "@/features/places/types";
 import { getApiErrorMessage } from "@/lib/apiClient";
@@ -24,20 +25,6 @@ import { cn } from "@/lib/utils";
 import { useTable } from "../hooks/use-tables";
 import { useCreateOuting } from "../hooks/use-new-outing";
 import { GuestPicker } from "../components/guest-picker";
-
-/**
- * El backend guarda el usuario de Instagram, no una URL. Aceptamos que el
- * usuario pegue el link completo o el @handle y extraemos el usuario.
- */
-function toInstagramHandle(raw: string): string | undefined {
-  const clean = raw
-    .trim()
-    .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
-    .replace(/^@/, "")
-    .replace(/[/?#].*$/, "");
-
-  return clean.length > 0 ? clean : undefined;
-}
 
 /** `datetime-local` da "2026-08-20T21:00", que ya es ISO válido. */
 function nowLocalIso(): string {

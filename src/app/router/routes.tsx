@@ -15,9 +15,11 @@ import { NewOutingPage } from "@/features/tables/pages/new-outing-page";
 import { TablesPage } from "@/features/tables/pages/tables-page";
 import { NewTablePage } from "@/features/tables/pages/new-table-page";
 import { TableDetailPage } from "@/features/tables/pages/table-detail-page";
+import { NewPlacePage } from "@/features/places/pages/new-place-page";
 import { PlaceDetailPage } from "@/features/places/pages/place-detail-page";
 import { ReviewOutingPage } from "@/features/reviews/pages/review-outing-page";
 import { ProfilePage } from "@/features/profile/pages/profile-page";
+import { FavoritesPage } from "@/features/favorites/pages/favorites-page";
 
 export const appRouter = createBrowserRouter([
   {
@@ -59,15 +61,7 @@ export const appRouter = createBrowserRouter([
               />
             ),
           },
-          {
-            path: "favorites",
-            element: (
-              <ComingSoon
-                title="Favoritos"
-                description="Los lugares que guardaste para volver."
-              />
-            ),
-          },
+          { path: "favorites", element: <FavoritesPage /> },
         ],
       },
       {
@@ -82,6 +76,7 @@ export const appRouter = createBrowserRouter([
           { path: "tables/new", element: <NewTablePage /> },
           { path: "tables/join", element: <JoinTablePage /> },
           { path: "tables/:tableId", element: <TableDetailPage /> },
+          { path: "places/new", element: <NewPlacePage /> },
           { path: "places/:placeId", element: <PlaceDetailPage /> },
           { path: "outings/:outingId/review", element: <ReviewOutingPage /> },
           {

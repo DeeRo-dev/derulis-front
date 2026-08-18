@@ -6,7 +6,6 @@ import {
   useDeleteTableImage,
   useUploadTableImage,
 } from "@/features/images/hooks/use-images";
-import { getApiErrorMessage } from "@/lib/apiClient";
 
 /**
  * Cabecera del detalle: la foto ocupa el ancho completo y los controles
@@ -77,21 +76,14 @@ export function TableHero({
           variant="ghost"
           label={photoUrl ? "Cambiar" : "Subir foto"}
           busy={uploadPhoto.isPending}
+          /* La portada se muestra apaisada y recortada: sin esto, una foto
+             vertical pierde la mitad sin que nadie lo elija. */
+          crop={{ aspect: 375 / 208 }}
           onPick={(file) => uploadPhoto.mutate(file)}
         />
       </div>
 
-      {uploadPhoto.isError || removePhoto.isError ? (
-        <p
-          role="alert"
-          className="absolute inset-x-4 bottom-16 rounded-xl bg-white/95 px-3 py-2 text-center text-sm text-error shadow backdrop-blur"
-        >
-          {getApiErrorMessage(
-            uploadPhoto.error ?? removePhoto.error,
-            "No pudimos cambiar la foto.",
-          )}
-        </p>
-      ) : null}
+      {/* Los errores los avisa el toast global. */}
     </div>
   );
 }

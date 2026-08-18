@@ -39,6 +39,8 @@ export type TableDto = {
   createdById: number;
   members: TableMemberDto[];
   upcomingOuting?: OutingDto | null;
+  /** Ya ocurrió y sigue abierta: le falta cargar lo que comieron. */
+  pendingOuting?: OutingDto | null;
   lastVisit?: OutingDto | null;
   pastVisits?: OutingDto[];
 };

@@ -5,6 +5,10 @@ export type UploadedImage = {
   url: string;
   storagePath: string;
   createdAt: string;
+  /** Falso solo cuando exista la moderación: hoy el backend las aprueba al subirlas. */
+  approved: boolean;
+  /** Quién la subió. El backend lo guarda desde siempre; acá está para poder auditarlo. */
+  uploadedBy: { id: number; name: string };
 };
 
 /** Igual que el backend. Duplicado a propósito: ver `validateImage`. */

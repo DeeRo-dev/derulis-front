@@ -47,6 +47,11 @@ export type Table = {
   statusDetail: string;
   members: Diner[];
   upcomingOuting: UpcomingOuting | null;
+  /**
+   * La salida que ya ocurrió y nadie cerró. Es lo primero que la mesa tiene
+   * que ver: le falta cargar lo que comieron.
+   */
+  pendingOuting: UpcomingOuting | null;
   pastVisits: PastVisit[];
   /** Último lugar visitado. Lo usa el listado: "Última: <lugar>". */
   lastVisit: PastVisit | null;

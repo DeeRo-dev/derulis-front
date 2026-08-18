@@ -7,6 +7,7 @@ import {
   getTable,
   joinTableByCode,
 } from "../api/tables.api";
+import { cancelOuting } from "../api/outings.api";
 
 export const tablesKeys = {
   all: ["tables"] as const,
@@ -37,6 +38,7 @@ export function useJoinTable() {
 
   return useMutation({
     mutationFn: joinTableByCode,
+    meta: { silent: true },
     onSuccess: (table) => {
       void queryClient.invalidateQueries({ queryKey: tablesKeys.all });
       navigate(`/tables/${table.id}`, { replace: true });
@@ -50,10 +52,34 @@ export function useCreateTable() {
 
   return useMutation({
     mutationFn: createTable,
+    meta: { silent: true },
     onSuccess: (table) => {
       void queryClient.invalidateQueries({ queryKey: tablesKeys.all });
       // Recién creada, el siguiente paso es invitar comensales.
       navigate(`/tables/${table.id}/invite`, { replace: true });
+    },
+  });
+}
+
+/**
+ * "No fuimos". La salida pasa a cancelada y deja de contar como visita.
+ *
+ * Existe porque ahora una salida se da por ocurrida sola al día siguiente:
+ * sin una forma de decir que no fueron, un plan que se cayó quedaría
+ * registrado como una visita al lugar.
+ */
+export function useCancelOuting(tableId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (outingId: number) => cancelOuting(outingId),
+    meta: {
+      success: "Marcamos que no fueron",
+      errorMessage: "No pudimos cancelar la salida",
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: tablesKeys.detail(tableId) });
+      void queryClient.invalidateQueries({ queryKey: tablesKeys.active() });
     },
   });
 }

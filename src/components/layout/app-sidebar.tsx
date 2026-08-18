@@ -48,19 +48,6 @@ export function AppSidebar() {
     <Sidebar side="right">
       <SidebarHeader className="gap-0 bg-lilac-100 p-0">
         <div className="flex items-start justify-between gap-3 px-4 py-5">
-          {/* La X va del lado por el que entra el panel, para que quede
-              debajo del mismo pulgar que abrió el menú. */}
-          {isMobile ? (
-            <button
-              type="button"
-              onClick={() => setOpenMobile(false)}
-              aria-label="Cerrar menú"
-              className="-ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted transition hover:bg-white/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
-            >
-              <FiX className="h-5 w-5" aria-hidden="true" />
-            </button>
-          ) : null}
-
           <Link
             to="/profile"
             onClick={closeOnMobile}
@@ -83,6 +70,18 @@ export function AppSidebar() {
               ) : null}
             </span>
           </Link>
+
+          {/* Arriba a la derecha, del lado por el que entra el panel. */}
+          {isMobile ? (
+            <button
+              type="button"
+              onClick={() => setOpenMobile(false)}
+              aria-label="Cerrar menú"
+              className="-mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted transition hover:bg-white/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+            >
+              <FiX className="h-5 w-5" aria-hidden="true" />
+            </button>
+          ) : null}
         </div>
       </SidebarHeader>
 

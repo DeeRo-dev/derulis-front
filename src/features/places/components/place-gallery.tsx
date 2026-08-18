@@ -2,13 +2,11 @@ import { motion } from "framer-motion";
 import { FiTrash2, FiImage } from "react-icons/fi";
 import { ImagePicker } from "@/components/ui/image-picker";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FormError } from "@/features/auth/components/form-error";
 import {
   useDeletePlaceImage,
   usePlaceImages,
   useUploadPlaceImage,
 } from "@/features/images/hooks/use-images";
-import { getApiErrorMessage, isForbidden } from "@/lib/apiClient";
 import { itemVariants, listVariants, tap } from "@/lib/motion";
 
 /**
@@ -22,12 +20,6 @@ export function PlaceGallery({ placeId }: { placeId: number }) {
   const images = usePlaceImages(placeId);
   const upload = useUploadPlaceImage(placeId);
   const remove = useDeletePlaceImage(placeId);
-
-  const uploadError = upload.isError
-    ? isForbidden(upload.error)
-      ? "Solo pueden subir fotos quienes visitaron el lugar."
-      : getApiErrorMessage(upload.error, "No pudimos subir la foto.")
-    : null;
 
   return (
     <section className="mt-8">
@@ -44,17 +36,8 @@ export function PlaceGallery({ placeId }: { placeId: number }) {
         />
       </div>
 
-      <FormError message={uploadError} />
-
-      {remove.isError ? (
-        <FormError
-          message={
-            isForbidden(remove.error)
-              ? "Solo podés borrar las fotos que subiste."
-              : getApiErrorMessage(remove.error, "No pudimos borrar la foto.")
-          }
-        />
-      ) : null}
+      {/* Los errores los avisa el toast global: son acciones sueltas, no
+          campos de un formulario que haya que corregir en su lugar. */}
 
       <div className="mt-4">
         {images.isPending ? (

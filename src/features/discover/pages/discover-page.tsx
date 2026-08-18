@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useCurrentUser } from "@/features/auth/hooks/use-auth";
 import { PlaceSearch } from "../components/place-search";
 import { TopPlaces } from "../components/top-places";
+import { NewPlaceFab } from "@/features/places/components/new-place-fab";
 import { itemVariants, listVariants } from "@/lib/motion";
 
 /**
@@ -37,9 +38,12 @@ export function DiscoverPage() {
         />
       </motion.section>
 
-      <motion.div variants={itemVariants}>
+      {/* pb-24: el botón flotante no puede tapar el final del listado. */}
+      <motion.div variants={itemVariants} className="pb-24">
         <TopPlaces search={search} page={page} onPageChange={setPage} />
       </motion.div>
+
+      <NewPlaceFab />
     </motion.div>
   );
 }

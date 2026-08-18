@@ -57,11 +57,13 @@ export function useOutingAttendance(outingId: number) {
 
   const join = useMutation({
     mutationFn: () => api.joinOuting(outingId),
+    meta: { success: "Te sumaste a la salida", errorMessage: "No pudimos sumarte" },
     onSuccess: refresh,
   });
 
   const leave = useMutation({
     mutationFn: () => api.leaveOuting(outingId),
+    meta: { success: "Te bajaste de la salida", errorMessage: "No pudimos sacarte" },
     onSuccess: refresh,
   });
 
@@ -74,6 +76,7 @@ export function useCreateMeal(outingId: number) {
   return useMutation({
     mutationFn: (input: { name: string; price?: number }) =>
       api.createMeal(outingId, input),
+    meta: { success: "Plato agregado", errorMessage: "No pudimos agregar el plato" },
     onSuccess: refresh,
   });
 }
@@ -90,6 +93,7 @@ export function useRateMeal(outingId: number, placeId?: number) {
       derulis: number;
       comment?: string;
     }) => api.rateMeal(mealId, input),
+    meta: { success: "Puntuación guardada", errorMessage: "No pudimos guardar la puntuación" },
     onSuccess: refresh,
   });
 }
@@ -104,6 +108,7 @@ export function useRateOuting(outingId: number, placeId?: number) {
       valueDerulis?: number;
       comment?: string;
     }) => api.rateOuting(outingId, input),
+    meta: { success: "Reseña guardada", errorMessage: "No pudimos guardar la reseña" },
     onSuccess: refresh,
   });
 }
@@ -115,6 +120,7 @@ export function useCloseOuting(outingId: number, placeId?: number) {
   return useMutation({
     mutationFn: (totalSpend: number | null) =>
       api.closeOuting(outingId, totalSpend),
+    meta: { success: "Salida cerrada", errorMessage: "No pudimos cerrar la salida" },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: outingsKeys.all });
       void queryClient.invalidateQueries({ queryKey: tablesKeys.all });

@@ -20,6 +20,7 @@ export function useLocatePlace(placeId: number, enabled: boolean) {
 
   const mutation = useMutation({
     mutationFn: () => locatePlace(placeId),
+    meta: { silent: true },
     onSuccess: (place) => {
       // Sin coordenadas nuevas no hay nada que refrescar.
       if (place.latitude === null || place.longitude === null) return;

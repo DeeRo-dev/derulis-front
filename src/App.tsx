@@ -1,5 +1,6 @@
 import { MotionConfig } from "framer-motion";
 import { AppRouter } from "./app/router";
+import { Toaster } from "./components/ui/sonner";
 
 function App() {
   return (
@@ -8,6 +9,7 @@ function App() {
        acordarse de contemplarlo en cada animación. */
     <MotionConfig reducedMotion="user">
       <AppRouter />
+      <Toaster />
     </MotionConfig>
   );
 }

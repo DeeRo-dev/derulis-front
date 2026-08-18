@@ -1,17 +1,18 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FiMapPin, FiUsers } from "react-icons/fi";
+import { FiMapPin, FiUsers, FiUser, FiLock, FiChevronRight } from "react-icons/fi";
 import { PiForkKnifeFill, PiNotePencilFill } from "react-icons/pi";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/ui/image-picker";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FormError } from "@/features/auth/components/form-error";
 import { useCurrentUser, useLogout } from "@/features/auth/hooks/use-auth";
 import {
   useDeleteAvatar,
   useUploadAvatar,
 } from "@/features/images/hooks/use-images";
-import { getApiErrorMessage } from "@/lib/apiClient";
+import { EditNameSheet } from "../components/edit-name-sheet";
+import { ChangePasswordSheet } from "../components/change-password-sheet";
 import { getMyStats } from "../api/profile.api";
 import type { UserStats } from "../api/profile.api";
 
@@ -42,8 +43,43 @@ const CARDS = [
   Icon: React.ComponentType<{ className?: string }>;
 }[];
 
+/** Una fila de la lista de ajustes. */
+function SettingRow({
+  icon,
+  label,
+  detail,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  detail: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-lilac-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+    >
+      <span
+        aria-hidden="true"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-lilac-100 text-lilac-700"
+      >
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold text-foreground">{label}</span>
+        <span className="block truncate text-sm text-muted">{detail}</span>
+      </span>
+      <FiChevronRight className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+    </button>
+  );
+}
+
 export function ProfilePage() {
   const user = useCurrentUser();
+  const [editingName, setEditingName] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
   const logout = useLogout();
   const uploadAvatar = useUploadAvatar();
   const removeAvatar = useDeleteAvatar();
@@ -72,6 +108,8 @@ export function ProfilePage() {
             variant="outline"
             label={user?.avatar ? "Cambiar foto" : "Subir foto"}
             busy={uploadAvatar.isPending}
+            // Marco redondo: el avatar se muestra así en toda la app.
+            crop={{ aspect: 1, round: true }}
             onPick={(file) => uploadAvatar.mutate(file)}
           />
 
@@ -87,20 +125,27 @@ export function ProfilePage() {
           ) : null}
         </div>
 
-        <FormError
-          message={
-            uploadAvatar.isError
-              ? getApiErrorMessage(
-                  uploadAvatar.error,
-                  "No pudimos subir la foto.",
-                )
-              : removeAvatar.isError
-                ? getApiErrorMessage(
-                    removeAvatar.error,
-                    "No pudimos quitar la foto.",
-                  )
-                : null
-          }
+        {/* Los errores los avisa el toast global. */}
+      </div>
+
+      <h2 className="mt-8 text-lg font-bold tracking-tight text-foreground">
+        Tu cuenta
+      </h2>
+
+      {/* `divide-y` en vez de tarjetas sueltas: son dos ajustes del mismo
+          tipo y una lista se lee más rápido que dos bloques. */}
+      <div className="mt-3 divide-y divide-lilac-100 overflow-hidden rounded-3xl bg-white shadow-lg shadow-lilac-200/50">
+        <SettingRow
+          icon={<FiUser className="h-4 w-4" />}
+          label="Nombre"
+          detail={user?.name ?? "Sin nombre"}
+          onClick={() => setEditingName(true)}
+        />
+        <SettingRow
+          icon={<FiLock className="h-4 w-4" />}
+          label="Contraseña"
+          detail="Cambiala cuando quieras"
+          onClick={() => setChangingPassword(true)}
         />
       </div>
 
@@ -142,6 +187,16 @@ export function ProfilePage() {
       <Button variant="secondary" className="mt-8 w-full" onClick={logout}>
         Cerrar sesión
       </Button>
+
+      <EditNameSheet
+        currentName={user?.name ?? ""}
+        open={editingName}
+        onOpenChange={setEditingName}
+      />
+      <ChangePasswordSheet
+        open={changingPassword}
+        onOpenChange={setChangingPassword}
+      />
     </section>
   );
 }

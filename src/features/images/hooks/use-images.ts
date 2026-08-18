@@ -28,6 +28,7 @@ export const imagesKeys = {
 export function useUploadAvatar() {
   return useMutation({
     mutationFn: uploadAvatar,
+    meta: { success: "Foto de perfil actualizada", errorMessage: "No pudimos subir la foto" },
     onSuccess: ({ avatar }) => updateStoredUser({ avatar }),
   });
 }
@@ -35,6 +36,7 @@ export function useUploadAvatar() {
 export function useDeleteAvatar() {
   return useMutation({
     mutationFn: deleteAvatar,
+    meta: { success: "Foto de perfil quitada", errorMessage: "No pudimos quitar la foto" },
     onSuccess: () => updateStoredUser({ avatar: null }),
   });
 }
@@ -52,6 +54,7 @@ export function useUploadPlaceImage(placeId: number) {
 
   return useMutation({
     mutationFn: (file: File) => uploadPlaceImage(placeId, file),
+    meta: { success: "Foto agregada", errorMessage: "No pudimos subir la foto" },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: imagesKeys.place(placeId) });
       // La primera foto pasa a ser la principal del lugar.
@@ -65,6 +68,7 @@ export function useDeletePlaceImage(placeId: number) {
 
   return useMutation({
     mutationFn: (imageId: number) => deletePlaceImage(placeId, imageId),
+    meta: { success: "Foto borrada", errorMessage: "No pudimos borrar la foto" },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: imagesKeys.place(placeId) });
       void queryClient.invalidateQueries({ queryKey: placesKeys.all });
@@ -77,6 +81,7 @@ export function useUploadTableImage(tableId: number) {
 
   return useMutation({
     mutationFn: (file: File) => uploadTableImage(tableId, file),
+    meta: { success: "Foto de la mesa actualizada", errorMessage: "No pudimos subir la foto" },
     onSuccess: () =>
       void queryClient.invalidateQueries({ queryKey: tablesKeys.all }),
   });
@@ -87,6 +92,7 @@ export function useDeleteTableImage(tableId: number) {
 
   return useMutation({
     mutationFn: () => deleteTableImage(tableId),
+    meta: { success: "Foto de la mesa quitada", errorMessage: "No pudimos quitar la foto" },
     onSuccess: () =>
       void queryClient.invalidateQueries({ queryKey: tablesKeys.all }),
   });
@@ -109,6 +115,7 @@ export function useUploadMealImage(mealId: number) {
 
   return useMutation({
     mutationFn: (file: File) => uploadMealImage(mealId, file),
+    meta: { success: "Foto agregada", errorMessage: "No pudimos subir la foto" },
     onSuccess: () =>
       void queryClient.invalidateQueries({ queryKey: imagesKeys.meal(mealId) }),
   });
@@ -119,6 +126,7 @@ export function useDeleteMealImage(mealId: number) {
 
   return useMutation({
     mutationFn: (imageId: number) => deleteMealImage(mealId, imageId),
+    meta: { success: "Foto borrada", errorMessage: "No pudimos borrar la foto" },
     onSuccess: () =>
       void queryClient.invalidateQueries({ queryKey: imagesKeys.meal(mealId) }),
   });

@@ -286,9 +286,12 @@ export function ReviewOutingPage() {
           >
             {closeOuting.isPending ? "Cerrando…" : "Cerrar la salida"}
           </Button>
+          {/* Ya no es "al cerrarla entra en el promedio": la salida cuenta
+              desde el día siguiente a su fecha. Cerrar es solo dar por
+              terminada la carga. */}
           <p className="mt-2 text-center text-xs text-muted">
-            Al cerrarla entra en el promedio del lugar y deja de aceptar
-            cambios.
+            Ya cuenta en el promedio del lugar. Cerrala cuando no vayan a
+            cargar nada más.
           </p>
         </div>
       ) : null}

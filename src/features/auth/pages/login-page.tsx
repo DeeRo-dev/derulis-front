@@ -32,7 +32,7 @@ export function LoginPage() {
       footerLinkLabel="Registrate"
       footerLinkTo="/register"
     >
-      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+      <form className="space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
         {login.isError ? (
           <FormError
             message={getApiErrorMessage(
@@ -65,13 +65,14 @@ export function LoginPage() {
         <div className="flex justify-end">
           <Link
             to="/recuperar"
-            className="text-sm font-medium text-primary hover:underline"
+            className="text-sm font-bold text-primary hover:underline"
           >
             ¿Olvidaste tu contraseña?
           </Link>
         </div>
 
-        <Button type="submit" className="w-full" disabled={login.isPending}>
+        <Button type="submit" className="mt-2 h-14 w-full shadow-lg shadow-primary/30"
+          disabled={login.isPending}>
           {login.isPending ? "Entrando…" : "Entrar"}
         </Button>
       </form>

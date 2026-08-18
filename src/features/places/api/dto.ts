@@ -5,6 +5,8 @@ export type PlaceDto = {
   id: number;
   name: string;
   address: string;
+  description?: string | null;
+  phone?: string | null;
   instagram: string | null;
   photoUrl: string | null;
   city?: string | null;
@@ -25,6 +27,9 @@ export function toPlace(dto: PlaceDto): Place {
     id: dto.id,
     name: dto.name,
     address: dto.address,
+    /* El listado no los selecciona: ausente y vacío son lo mismo acá. */
+    description: dto.description ?? null,
+    phone: dto.phone ?? null,
     photoUrl: dto.photoUrl,
     instagram: dto.instagram,
     cuisines: dto.cuisines ?? [],

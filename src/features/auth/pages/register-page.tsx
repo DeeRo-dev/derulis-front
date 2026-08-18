@@ -31,7 +31,7 @@ export function RegisterPage() {
       footerLinkLabel="Iniciá sesión"
       footerLinkTo="/login"
     >
-      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+      <form className="space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
         {signup.isError ? (
           <FormError
             message={getApiErrorMessage(
@@ -71,7 +71,8 @@ export function RegisterPage() {
           {...register("password")}
         />
 
-        <Button type="submit" className="w-full" disabled={signup.isPending}>
+        <Button type="submit" className="mt-2 h-14 w-full shadow-lg shadow-primary/30"
+          disabled={signup.isPending}>
           {signup.isPending ? "Creando cuenta…" : "Crear cuenta"}
         </Button>
       </form>

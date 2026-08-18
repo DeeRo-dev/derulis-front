@@ -6,6 +6,8 @@ import type { Place, PlaceReviews, PlaceWithScore, PagedPlaces } from "../types"
 export type CreatePlaceInput = {
   name: string;
   address: string;
+  description?: string;
+  phone?: string;
   city?: string;
   province?: string;
   country?: string;

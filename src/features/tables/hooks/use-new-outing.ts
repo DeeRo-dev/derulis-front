@@ -40,6 +40,8 @@ export function useCreateOuting(tableId: number) {
   const navigate = useNavigate();
 
   return useMutation({
+    // El formulario muestra el error arriba, junto a los campos.
+    meta: { silent: true },
     mutationFn: async (input: NewOutingInput) => {
       const placeId =
         "existingId" in input.place

@@ -8,6 +8,7 @@ import { useTable } from "../hooks/use-tables";
 import { TableHero } from "../components/table-hero";
 import { TableMembers } from "../components/table-members";
 import { UpcomingOuting } from "../components/upcoming-outing";
+import { PendingOuting } from "../components/pending-outing";
 import { PastVisits } from "../components/past-visits";
 import { InviteCode } from "../components/invite-code";
 
@@ -91,6 +92,10 @@ export function TableDetailPage() {
       <TableMembers tableId={table.id} members={table.members} />
 
       {table.inviteCode ? <InviteCode code={table.inviteCode} /> : null}
+
+      {table.pendingOuting ? (
+        <PendingOuting tableId={table.id} outing={table.pendingOuting} />
+      ) : null}
 
       <UpcomingOuting tableId={table.id} outing={table.upcomingOuting} />
       <PastVisits tableId={table.id} visits={table.pastVisits} />

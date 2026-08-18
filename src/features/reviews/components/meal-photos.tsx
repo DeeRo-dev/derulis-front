@@ -1,13 +1,11 @@
 import { motion } from "framer-motion";
 import { FiTrash2 } from "react-icons/fi";
 import { ImagePicker } from "@/components/ui/image-picker";
-import { FormError } from "@/features/auth/components/form-error";
 import {
   useDeleteMealImage,
   useMealImages,
   useUploadMealImage,
 } from "@/features/images/hooks/use-images";
-import { getApiErrorMessage } from "@/lib/apiClient";
 import { itemVariants, listVariants, tap } from "@/lib/motion";
 
 /**
@@ -47,15 +45,7 @@ export function MealPhotos({
         />
       </div>
 
-      <FormError
-        message={
-          upload.isError
-            ? getApiErrorMessage(upload.error, "No pudimos subir la foto.")
-            : remove.isError
-              ? getApiErrorMessage(remove.error, "No pudimos borrar la foto.")
-              : null
-        }
-      />
+      {/* Los errores los avisa el toast global. */}
 
       {images.data && images.data.length > 0 ? (
         <motion.ul

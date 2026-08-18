@@ -25,6 +25,7 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: authApi.login,
+    meta: { silent: true },
     onSuccess,
     retry: false,
   });
@@ -35,6 +36,7 @@ export function useRegister() {
 
   return useMutation({
     mutationFn: authApi.register,
+    meta: { silent: true },
     onSuccess,
     retry: false,
   });

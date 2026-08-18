@@ -32,6 +32,7 @@ export function useScheduleVisit(placeId: number) {
         attendance: "invited",
         booked: true,
       }),
+    meta: { success: "Salida agendada", errorMessage: "No pudimos agendar la salida" },
     onSuccess: (_outing, { tableId }) => {
       void queryClient.invalidateQueries({ queryKey: tablesKeys.all });
       void queryClient.invalidateQueries({ queryKey: placesKeys.all });

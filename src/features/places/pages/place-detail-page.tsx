@@ -8,7 +8,8 @@ import {
   FiInstagram,
   FiExternalLink,
   FiCalendar,
-  FiChevronRight,
+  FiMap,
+  FiPhone,
 } from "react-icons/fi";
 import { PiForkKnifeFill } from "react-icons/pi";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ import { PlaceScore } from "../components/place-score";
 import { TableReviewCard } from "../components/table-review-card";
 import { ScheduleVisitSheet } from "../components/schedule-visit-sheet";
 import { PlaceGallery } from "../components/place-gallery";
+import { FavoriteButton } from "@/features/favorites/components/favorite-button";
 import type { TableReview } from "../types";
 
 /** Un lugar es "muy bien puntuado" a partir de 4.5, como en el listado. */
@@ -147,6 +149,12 @@ export function PlaceDetailPage() {
   return (
     <motion.section variants={listVariants} initial="initial" animate="animate">
       <DetailTopBar>
+        <FavoriteButton
+          placeId={place.id}
+          placeName={place.name}
+          variant="bare"
+          className="h-10 w-10"
+        />
         <ShareButton name={place.name} />
       </DetailTopBar>
 
@@ -180,6 +188,15 @@ export function PlaceDetailPage() {
         </div>
       </motion.div>
 
+      {place.description ? (
+        <motion.p
+          variants={itemVariants}
+          className="mt-5 text-sm leading-6 text-muted"
+        >
+          {place.description}
+        </motion.p>
+      ) : null}
+
       <motion.section
         variants={itemVariants}
         className="mt-5 rounded-3xl bg-white p-5 shadow-lg shadow-lilac-200/50"
@@ -188,46 +205,41 @@ export function PlaceDetailPage() {
           Ubicación y contacto
         </h2>
 
-        {/* Sin coordenadas cargadas no hay nada que señalar en el mapa: la
-            dirección queda como texto en vez de un link que no lleva a nada. */}
-        {mappable ? (
-          <Link
-            to={`/search?place=${place.id}`}
-            className="mt-4 flex items-center gap-3 rounded-xl transition-colors hover:bg-lilac-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        {/* `items-center`: con una sola línea de texto, alinear arriba deja
+            la dirección despegada del ícono. */}
+        <div className="mt-4 flex items-center gap-3">
+          <span
+            aria-hidden="true"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-lilac-100 text-lilac-700"
           >
-            <span
-              aria-hidden="true"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-lilac-100 text-lilac-700"
-            >
-              <FiMapPin className="h-4 w-4" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm text-foreground">
-                {place.address}
-              </span>
-              <span className="block text-xs text-primary">
-                {area ? `${area} · ` : ""}Ver en el mapa
-              </span>
-            </span>
-            <FiChevronRight
-              className="h-4 w-4 shrink-0 text-muted"
-              aria-hidden="true"
-            />
-          </Link>
-        ) : (
-          <div className="mt-4 flex items-start gap-3">
-            <span
-              aria-hidden="true"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-lilac-100 text-lilac-700"
-            >
-              <FiMapPin className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm text-foreground">{place.address}</p>
-              {area ? <p className="text-xs text-muted">{area}</p> : null}
-            </div>
+            <FiMapPin className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-foreground">{place.address}</p>
+            {area ? <p className="text-xs text-muted">{area}</p> : null}
           </div>
-        )}
+        </div>
+
+        {place.phone ? (
+          <>
+            <hr className="my-4 border-lilac-100" />
+            {/* `tel:` y no texto suelto: en el celular llamar es un toque. */}
+            <a
+              href={`tel:${place.phone.replace(/\s/g, "")}`}
+              className="flex items-center gap-3 rounded-xl transition-colors hover:bg-lilac-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <span
+                aria-hidden="true"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-lilac-100 text-lilac-700"
+              >
+                <FiPhone className="h-4 w-4" />
+              </span>
+              <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                {place.phone}
+              </span>
+            </a>
+          </>
+        ) : null}
 
         {place.instagram ? (
           <>
@@ -254,6 +266,24 @@ export function PlaceDetailPage() {
             </a>
           </>
         ) : null}
+
+        {/* Un botón propio y no la fila entera clickeable: la acción tiene
+            que verse, no descubrirse tocando el texto. */}
+        {mappable ? (
+          <Link
+            to={`/search?place=${place.id}`}
+            className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-full border border-lilac-300 bg-white text-sm font-semibold text-primary transition-colors hover:bg-lilac-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <FiMap className="h-4 w-4 shrink-0" aria-hidden="true" />
+            Ver en el mapa
+          </Link>
+        ) : (
+          /* Sin coordenadas no hay nada que señalar: se dice por qué, en vez
+             de un botón que lleva a un mapa vacío. */
+          <p className="mt-5 rounded-xl bg-lilac-50 px-4 py-3 text-center text-sm text-muted">
+            Todavía no tiene el punto marcado en el mapa.
+          </p>
+        )}
       </motion.section>
 
       <motion.section

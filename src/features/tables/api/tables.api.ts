@@ -28,11 +28,20 @@ function toPastVisit(dto: OutingDto): PastVisit {
   };
 }
 
-/** El estado no viene del backend: se deriva de la próxima salida. */
-function deriveStatus(outing: OutingDto | null | undefined): {
+/** El estado no viene del backend: se deriva de las salidas de la mesa. */
+function deriveStatus(
+  outing: OutingDto | null | undefined,
+  pending: OutingDto | null | undefined,
+): {
   status: Table["status"];
   statusDetail: string;
 } {
+  /* Lo pendiente manda sobre lo que viene: si ya fueron y nadie cargó la
+     reseña, eso es lo que la mesa tiene que resolver primero. */
+  if (pending) {
+    return { status: "deciding", statusDetail: "Falta cargar la reseña" };
+  }
+
   if (!outing) {
     return { status: "deciding", statusDetail: "Decidiendo el lugar" };
   }
@@ -50,7 +59,10 @@ function deriveStatus(outing: OutingDto | null | undefined): {
 }
 
 export function toTable(dto: TableDto): Table {
-  const { status, statusDetail } = deriveStatus(dto.upcomingOuting);
+  const { status, statusDetail } = deriveStatus(
+    dto.upcomingOuting,
+    dto.pendingOuting,
+  );
 
   return {
     id: dto.id,
@@ -70,6 +82,9 @@ export function toTable(dto: TableDto): Table {
     })),
     upcomingOuting: dto.upcomingOuting
       ? toUpcomingOuting(dto.upcomingOuting)
+      : null,
+    pendingOuting: dto.pendingOuting
+      ? toUpcomingOuting(dto.pendingOuting)
       : null,
     pastVisits: (dto.pastVisits ?? []).map(toPastVisit),
     lastVisit: dto.lastVisit ? toPastVisit(dto.lastVisit) : null,

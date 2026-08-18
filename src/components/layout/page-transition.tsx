@@ -13,7 +13,12 @@ import { pageTransition, pageVariants } from "@/lib/motion";
  * `initial={false}`: en la primera carga la pantalla ya está donde tiene que
  * estar, no aparece deslizándose.
  */
-export function PageTransition() {
+/**
+ * `className` va al nodo animado: algunos layouts necesitan que la pantalla
+ * se estire (por ejemplo para dejar el pie del login abajo de todo), y el
+ * nodo de la transición está en el medio de esa cadena de flex.
+ */
+export function PageTransition({ className }: { className?: string }) {
   const outlet = useOutlet();
   const { pathname } = useLocation();
 
@@ -26,6 +31,7 @@ export function PageTransition() {
         animate="animate"
         exit="exit"
         transition={pageTransition}
+        className={className}
       >
         {outlet}
       </motion.div>

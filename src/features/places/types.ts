@@ -2,6 +2,8 @@ export type Place = {
   id: number;
   name: string;
   address: string;
+  description: string | null;
+  phone: string | null;
   photoUrl: string | null;
   city: string | null;
   province: string | null;
